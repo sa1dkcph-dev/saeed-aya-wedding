@@ -77,6 +77,9 @@ body.locked{overflow:hidden;height:100dvh}
 }
 .lang-toggle button.active{color:var(--bronze-text);font-style:normal;font-weight:500}
 .lang-toggle .sep{color:var(--ink-soft);opacity:.4;font-size:.8rem;font-style:italic}
+/* flex children need this explicitly — an author display rule would otherwise
+   beat the UA [hidden] rule and a disabled language would still show */
+.lang-toggle [hidden]{display:none}
 
 /* ============ envelope overlay ============ */
 #envelope-screen{
@@ -92,7 +95,7 @@ body.locked{overflow:hidden;height:100dvh}
 #envelope-screen.opened{opacity:0;visibility:hidden;pointer-events:none}
 
 .env-intro{
-  text-align:center;margin-bottom:52px;padding:0 24px;
+  text-align:center;margin-bottom:clamp(44px,5.5vh,68px);padding:0 24px;
   color:var(--ink-soft);max-width:520px;
 }
 .env-intro .script{
@@ -116,7 +119,7 @@ body.locked{overflow:hidden;height:100dvh}
 }
 
 .envelope{
-  position:relative;width:min(320px,82vw);aspect-ratio:1.38/1;
+  position:relative;width:clamp(260px,82vw,400px);aspect-ratio:1.38/1;
   cursor:pointer;-webkit-tap-highlight-color:transparent;
   filter:drop-shadow(0 24px 40px rgba(140,100,90,.25));
 }
@@ -162,15 +165,15 @@ body.locked{overflow:hidden;height:100dvh}
 /* wax seal */
 .env-seal{
   position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);
-  width:74px;height:74px;border-radius:50%;
+  width:clamp(74px,8vw,92px);height:clamp(74px,8vw,92px);border-radius:50%;
   background:radial-gradient(circle at 32% 28%, #d9b891, var(--brass) 68%, #8f6d3d);
   display:flex;align-items:center;justify-content:center;
-  color:var(--white);font-family:'Pinyon Script',cursive;font-size:1.7rem;
+  color:var(--white);font-family:'Pinyon Script',cursive;font-size:clamp(1.7rem,1.9vw,2.1rem);
   box-shadow:0 4px 14px rgba(120,85,40,.4), inset 0 0 0 4px rgba(255,255,255,.18);
   z-index:4;transition:opacity .5s ease, transform .5s ease;
 }
 .envelope.open .env-seal{opacity:0;transform:translate(-50%,-50%) scale(.6)}
-.env-hint{margin-top:42px;font-size:.88rem;letter-spacing:.16em;text-transform:uppercase;color:var(--bronze-text);animation:pulse 2.4s ease-in-out infinite}
+.env-hint{margin-top:clamp(36px,4.6vh,58px);font-size:.88rem;letter-spacing:.16em;text-transform:uppercase;color:var(--bronze-text);animation:pulse 2.4s ease-in-out infinite}
 /* soft staggered entrance so the scene composes itself */
 @keyframes envRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .env-intro{animation:envRise 1.1s ease-out both}
@@ -183,7 +186,7 @@ body.locked{overflow:hidden;height:100dvh}
 }
 .env-to .family-name{
   display:block;color:var(--bronze-text);font-style:normal;
-  font-size:1.15rem;letter-spacing:.04em;font-weight:600;line-height:1.45;
+  font-size:clamp(1.15rem,.5vw + 1.05rem,1.4rem);letter-spacing:.04em;font-weight:600;line-height:1.45;
 }
 @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
 
@@ -248,7 +251,8 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 /* ============ hero ============ */
 .hero{
   min-height:100dvh;max-width:none;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:120px 24px 80px;
+  align-items:center;justify-content:center;
+  padding:clamp(96px,13vh,150px) 24px clamp(72px,9vh,112px);
   background:
     radial-gradient(90% 55% at 50% 0%, var(--sky) 0%, transparent 60%),
     radial-gradient(70% 40% at 22% 62%, rgba(246,214,140,.5) 0%, transparent 70%),
@@ -272,12 +276,12 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .hero-inner{
   position:relative;z-index:2;
   display:flex;flex-direction:column;align-items:center;
-  gap:24px;
+  gap:clamp(26px,4.2vh,50px);
 }
-.bismillah{font-family:'Amiri','Noto Naskh Arabic',serif;font-style:italic;font-size:1.35rem;color:var(--bronze-text);letter-spacing:0}
-.eyebrow{font-size:1rem;letter-spacing:.03em;text-transform:none;color:var(--ink);line-height:1.75;font-style:italic;max-width:34ch}
-.hero-tag{font-size:.92rem;color:var(--bronze-text)}
-.hero-rings{width:120px;height:120px;position:relative}
+.bismillah{font-family:'Amiri','Noto Naskh Arabic',serif;font-style:italic;font-size:clamp(1.35rem,.8vw + 1.15rem,2rem);color:var(--bronze-text);letter-spacing:0}
+.eyebrow{font-size:clamp(1rem,.35vw + .92rem,1.25rem);letter-spacing:.03em;text-transform:none;color:var(--ink);line-height:1.75;font-style:italic;max-width:34ch}
+.hero-tag{font-size:clamp(.92rem,.3vw + .85rem,1.1rem);color:var(--bronze-text)}
+.hero-rings{width:clamp(120px,11vw,180px);height:clamp(120px,11vw,180px);position:relative}
 .hero-rings svg{width:100%;height:100%;filter:drop-shadow(0 2px 5px rgba(176,141,87,.35))}
 /* diamond bling */
 @keyframes gemTwinkle{
@@ -299,11 +303,11 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .gem-spark.s4{animation-delay:2.4s}
 .gem-sweep{animation:gemSweepMove 3.4s ease-in-out infinite}
 .gem-halo{animation:gemHalo 3.4s ease-in-out infinite}
-.hero-names{font-size:clamp(2.8rem,11vw,4.4rem);color:var(--ink);line-height:1.1}
+.hero-names{font-size:clamp(2.8rem,6vw + 1rem,5.6rem);color:var(--ink);line-height:1.1}
 .hero-amp{color:var(--bronze-text);font-size:.6em;vertical-align:.18em;padding:0 .12em}
-.hero-date{font-size:1rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.hero-date{font-size:clamp(1rem,.32vw + .93rem,1.2rem);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
 .scroll-cue{
-  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  position:absolute;bottom:clamp(14px,2.6vh,34px);left:50%;transform:translateX(-50%);
   font-size:1.9rem;color:var(--bronze-text);
   text-shadow:0 0 10px rgba(255,253,246,.9),0 0 4px rgba(255,253,246,.95);
   animation:float 2.6s ease-in-out infinite;z-index:2;
@@ -382,31 +386,36 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
   0%  {transform:translate(-50%,-50%) scale(.3);opacity:1}
   100%{transform:translate(-50%,-50%) scale(9);opacity:0}
 }
-}
 
 /* ============ invitation wording ============ */
-.invite{display:flex;flex-direction:column;align-items:center;gap:30px;background:var(--ivory)}
-.invite p.lead{font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase;line-height:1.9;color:var(--ink)}
+.invite{
+  display:flex;flex-direction:column;align-items:center;
+  gap:clamp(30px,4.5vh,52px);background:var(--ivory);
+  max-width:none;padding:clamp(96px,14vh,160px) 24px;
+}
+.invite p.lead{font-size:clamp(1.05rem,.55vw + .92rem,1.4rem);letter-spacing:.14em;text-transform:uppercase;line-height:2;color:var(--ink)}
 .date-lockup{
-  display:flex;align-items:center;justify-content:center;gap:20px;
+  display:flex;align-items:center;justify-content:center;gap:clamp(12px,5vw,48px);
+  max-width:100%;
 }
 .date-lockup .side{
-  font-size:.95rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);
-  padding:10px 0;border-top:1px solid var(--brass);border-bottom:1px solid var(--brass);
-  min-width:96px;
+  font-size:clamp(.95rem,.4vw + .84rem,1.2rem);letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
+  padding:clamp(10px,1.4vh,16px) 0;border-top:1px solid var(--brass);border-bottom:1px solid var(--brass);
+  min-width:clamp(72px,24vw,150px);
 }
-.date-lockup .day{font-size:4rem;font-weight:500;color:var(--ink);line-height:1}
-.venue-line{font-family:'Pinyon Script',cursive;font-size:clamp(1.7rem,7vw,2.3rem);color:var(--ink)}
+.date-lockup .day{font-size:clamp(4rem,3vw + 3rem,6.4rem);font-weight:500;color:var(--ink);line-height:1}
+.venue-line{font-family:'Pinyon Script',cursive;font-size:clamp(1.7rem,2.2vw + 1.2rem,3.4rem);color:var(--ink)}
 .event-time{
-  font-size:1.05rem;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--bronze-text);font-weight:600;margin-top:-12px;
+  font-size:clamp(1.05rem,.4vw + .94rem,1.3rem);letter-spacing:.22em;text-transform:uppercase;
+  color:var(--bronze-text);font-weight:600;
+  margin-top:calc(clamp(30px,4.5vh,52px) * -.45); /* nestles under the date, not glued to it */
 }
-.invite p.sub{font-size:1.12rem;letter-spacing:.02em;text-transform:none;line-height:1.75;color:var(--ink)}
+.invite p.sub{font-size:clamp(1.12rem,.45vw + 1rem,1.35rem);letter-spacing:.02em;text-transform:none;line-height:1.75;color:var(--ink)}
 /* action link buttons */
-.action-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.action-row{display:flex;gap:clamp(14px,1.6vw,24px);justify-content:center;flex-wrap:wrap}
 .link-btn{
-  display:inline-block;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--bronze-text);text-decoration:none;padding:14px 24px;border-radius:3px;
+  display:inline-block;font-size:clamp(.9rem,.3vw + .82rem,1.02rem);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--bronze-text);text-decoration:none;padding:clamp(14px,1.6vh,17px) clamp(24px,2.4vw,34px);border-radius:3px;
   border:1.5px solid rgba(138,106,53,.75);background:#fffdf9;font-weight:500;
   transition:background .3s ease,color .3s ease,box-shadow .3s ease;
   box-shadow:0 3px 8px rgba(120,90,50,.08);
@@ -420,30 +429,30 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .link-btn.call:hover{background:#5c451f}
 
 /* ---- RSVP form (primary) ---- */
-.rsvp-form{max-width:460px;margin:38px auto 0;text-align:left;display:flex;flex-direction:column;gap:30px}
-.rsvp-field label{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:11px}
+.rsvp-form{max-width:520px;margin:50px auto 0;text-align:left;display:flex;flex-direction:column;gap:42px}
+.rsvp-field label{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:15px;line-height:1.5}
 .rsvp-field input[type="text"],.rsvp-field input[type="number"],.rsvp-field textarea{
   width:100%;border:1px solid rgba(176,141,87,.4);border-radius:3px;
   background:#fffdf9;font-family:inherit;font-size:1.08rem;line-height:1.5;color:var(--ink);
-  padding:15px 15px;outline:none;transition:border-color .3s ease,box-shadow .3s ease;
+  padding:16px 16px;outline:none;transition:border-color .3s ease,box-shadow .3s ease;
 }
 .rsvp-field input:focus,.rsvp-field textarea:focus{border-color:var(--bronze-text);box-shadow:0 0 0 3px rgba(114,87,41,.15)}
-.rsvp-field textarea{resize:vertical;min-height:88px;line-height:1.6;font-size:1rem}
-.rsvp-toggle{display:flex;gap:10px}
+.rsvp-field textarea{resize:vertical;min-height:104px;line-height:1.6;font-size:1rem}
+.rsvp-toggle{display:flex;gap:12px}
 .rsvp-toggle input{position:absolute;opacity:0;width:1px;height:1px}
 .rsvp-toggle label{
-  flex:1;text-align:center;padding:17px 12px;border:2px solid rgba(176,141,87,.6);
-  border-radius:3px;font-size:.86rem;letter-spacing:.06em;font-weight:500;
+  flex:1;text-align:center;padding:18px 14px;border:2px solid rgba(176,141,87,.6);
+  border-radius:3px;font-size:.86rem;letter-spacing:.06em;font-weight:500;line-height:1.4;
   color:var(--bronze-text);background:#fffdf9;cursor:pointer;transition:all .25s ease;margin:0;
 }
 .rsvp-toggle input:checked + label{background:var(--bronze-text);border-color:var(--bronze-text);color:#fff;box-shadow:0 3px 10px rgba(114,87,41,.3)}
 .rsvp-toggle input:focus-visible + label{outline:2px solid var(--brass);outline-offset:2px}
 .rsvp-guests{max-height:0;overflow:hidden;transition:max-height .35s ease,opacity .35s ease;opacity:0}
-.rsvp-guests.show{max-height:260px;opacity:1}
+.rsvp-guests.show{max-height:280px;opacity:1}
 .rsvp-submit{
-  margin-top:20px;border:none;background:var(--bronze-text);color:#fff;
+  margin-top:10px;border:none;background:var(--bronze-text);color:#fff;
   font-family:inherit;font-size:1rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
-  padding:18px 24px;border-radius:4px;cursor:pointer;transition:all .3s ease;
+  padding:19px 24px;border-radius:4px;cursor:pointer;transition:all .3s ease;
   box-shadow:0 6px 16px rgba(114,87,41,.35);
 }
 .rsvp-submit:hover{background:#5c451f;box-shadow:0 8px 20px rgba(114,87,41,.45);transform:translateY(-1px)}
@@ -451,48 +460,60 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .rsvp-status{font-size:1.05rem;line-height:1.6}
 .rsvp-status.success{
   color:#14532d;background:#e4f2e6;border:1px solid #2f7a45;border-left:5px solid #2f7a45;
-  border-radius:4px;padding:26px 22px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
+  border-radius:4px;padding:clamp(34px,4.2vh,46px) clamp(22px,3vw,36px);text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:clamp(14px,1.7vh,20px);
 }
 .confirm-mark{
-  display:grid;place-items:center;width:46px;height:46px;border-radius:50%;
-  background:#2f7a45;color:#fff;font-size:1.5rem;line-height:1;margin-bottom:4px;
+  display:grid;place-items:center;width:clamp(46px,5vw,58px);height:clamp(46px,5vw,58px);border-radius:50%;
+  background:#2f7a45;color:#fff;font-size:clamp(1.5rem,1.6vw,1.9rem);line-height:1;margin-bottom:clamp(6px,1vh,12px);
   animation:confirmPop .5s cubic-bezier(.2,.9,.3,1.4) both;
 }
 @keyframes confirmPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
-.confirm-title{font-size:1.4rem;font-weight:600;letter-spacing:.02em}
-.confirm-detail{font-size:1.08rem;line-height:1.6;font-weight:500}
-.confirm-note{font-size:.9rem;line-height:1.5;color:#2f5d3a;opacity:.85;margin-top:6px}
+.confirm-title{font-size:clamp(1.4rem,.6vw + 1.28rem,1.7rem);font-weight:600;letter-spacing:.02em}
+.confirm-detail{font-size:clamp(1.08rem,.35vw + 1rem,1.22rem);line-height:1.6;font-weight:500}
+.confirm-note{font-size:.9rem;line-height:1.6;color:#2f5d3a;opacity:.85;margin-top:clamp(6px,1vh,12px)}
 .confirm-adults,.confirm-phones{
-  display:flex;align-items:flex-start;gap:11px;text-align:left;
-  width:100%;margin-top:20px;padding:16px 18px;
+  display:flex;align-items:flex-start;gap:13px;text-align:left;
+  width:100%;margin-top:clamp(24px,2.8vh,32px);padding:clamp(18px,2.1vh,22px) clamp(18px,2vw,24px);
   background:var(--notice-bg);
   border:1px solid var(--notice-border);border-left:5px solid var(--notice-border);
   border-radius:3px;
-  color:var(--notice-text);font-weight:600;font-size:1.02rem;line-height:1.6;
+  color:var(--notice-text);font-weight:600;font-size:1.02rem;line-height:1.65;
 }
-.adults-icon{width:21px;height:21px;flex:none;margin-top:1px}
-.confirm-phones{margin-top:12px}
+.adults-icon{width:21px;height:21px;flex:none;margin-top:2px}
+/* the second panel sits tighter against the first — this override follows panel
+   ORDER, not identity, so it moves whenever the two are reordered */
+.confirm-adults{margin-top:clamp(14px,1.6vh,18px)}
+.standing-note{
+  display:flex;align-items:flex-start;gap:13px;text-align:left;
+  max-width:520px;margin:clamp(34px,4vh,46px) auto 0;
+  padding:clamp(18px,2.1vh,22px) clamp(18px,2vw,24px);
+  background:var(--notice-bg);
+  border:1px solid var(--notice-border);border-left:5px solid var(--notice-border);
+  border-radius:3px;
+  color:var(--notice-text);font-weight:600;font-size:1.02rem;line-height:1.65;
+}
+html[dir="rtl"] .standing-note{border-left:1px solid var(--notice-border);border-right:5px solid var(--notice-border)}
 .rsvp-status.error{
   color:#7a2e22;background:#fbe6e2;border:1px solid #a8402f;border-left:5px solid #a8402f;
-  border-radius:3px;padding:16px 18px;font-weight:600;
+  border-radius:3px;padding:clamp(18px,2.1vh,22px) clamp(18px,2vw,24px);font-weight:600;line-height:1.65;
 }
 .rsvp-secondary{margin-top:36px;padding-top:26px;border-top:1px solid rgba(176,141,87,.3);max-width:420px;margin-left:auto;margin-right:auto}
 .rsvp-secondary p{font-size:.85rem;letter-spacing:.04em;color:var(--ink);font-weight:500;margin-bottom:14px}
 
 /* standalone contact section — deliberately unrelated to the RSVP card */
 .contact{
-  max-width:none;padding:64px 26px;text-align:center;
+  max-width:none;padding:clamp(78px,11vh,110px) 26px;text-align:center;
   /* sits between the details section (which ends in blush) and the footer
      (which begins in blush) — keep the wash continuous */
   background:var(--blush);
 }
 .contact-inner{max-width:460px;margin:0 auto}
 .contact h3{
-  font-size:1.35rem;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--bronze-text);font-weight:600;margin-bottom:10px;
+  font-size:clamp(1.35rem,.6vw + 1.22rem,1.65rem);letter-spacing:.2em;text-transform:uppercase;
+  color:var(--bronze-text);font-weight:600;margin-bottom:16px;
 }
-.contact p{font-size:1.05rem;color:var(--ink);margin-bottom:22px}
+.contact p{font-size:clamp(1.05rem,.35vw + .97rem,1.2rem);color:var(--ink);margin-bottom:clamp(30px,3.6vh,42px)}
 
 /* visible keyboard focus across all interactive elements */
 .link-btn:focus-visible,
@@ -508,24 +529,24 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 /* venue scene */
 
 /* ============ details ============ */
-.details{background:linear-gradient(180deg, var(--ivory) 0%, var(--blush) 100%);max-width:none;padding:88px 24px 80px}
-.details-inner{max-width:620px;margin:0 auto}
+.details{background:linear-gradient(180deg, var(--ivory) 0%, var(--blush) 100%);max-width:none;padding:clamp(100px,13vh,140px) clamp(10px,3vw,24px) clamp(92px,12vh,128px)}
+.details-inner{max-width:700px;margin:0 auto}
 .detail-block{
   margin-bottom:0;background:var(--ivory);border:1px solid rgba(176,141,87,.4);
-  border-radius:6px;padding:56px 44px;box-shadow:0 6px 20px rgba(120,90,50,.1);
+  border-radius:6px;padding:68px clamp(20px,6vw,48px) 64px;box-shadow:0 6px 20px rgba(120,90,50,.1);
 }
-.detail-block h3{font-size:1.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:20px;font-weight:600}
+.detail-block h3{font-size:clamp(1.5rem,.6vw + 1.35rem,1.8rem);letter-spacing:.22em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:30px;font-weight:600}
 .detail-block .big{font-size:1.5rem;font-weight:500;color:var(--ink)}
 .detail-block p{font-size:1.18rem;line-height:1.75;color:var(--ink)}
 .rsvp-deadline{
-  display:inline-block;margin:0 auto;padding:9px 18px;border-radius:3px;
+  display:inline-block;margin:0 auto;padding:11px 20px;border-radius:3px;
   background:var(--notice-bg);border:1px solid var(--notice-border);
   color:var(--notice-text);font-weight:600;font-size:1.05rem;letter-spacing:.02em;
 }
 
 /* footer */
-footer{position:relative;padding:40px 24px 56px;text-align:center;background:linear-gradient(180deg,var(--blush),var(--blush-deep))}
-footer .script{font-size:clamp(2rem,8vw,2.6rem);color:var(--ink)}
+footer{position:relative;padding:clamp(48px,6vh,76px) 24px clamp(56px,7vh,88px);text-align:center;background:linear-gradient(180deg,var(--blush),var(--blush-deep))}
+footer .script{font-size:clamp(2rem,4vw + 1rem,3.2rem);color:var(--ink)}
 footer p{font-size:.9rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);margin-top:14px}
 
 @media (prefers-reduced-motion: reduce){
@@ -892,7 +913,14 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
     <p class="sub reveal" data-i18n="addressTime">Bellahøjvej 20 · 2700 København</p>
     <div class="action-row reveal" style="margin-top:6px">
       <a class="link-btn" data-i18n="mapsBtn" target="_blank" rel="noopener" href="https://maps.google.com/?q=Bellah%C3%B8jgaard,+Bellah%C3%B8jvej+20,+2700+K%C3%B8benhavn">Open in Maps</a>
-      <a class="link-btn" data-i18n="calBtn" download="saeed-aya-wedding.ics" href="data:text/calendar;charset=utf-8,BEGIN:VCALENDAR%0D%0AVERSION:2.0%0D%0APRODID:-//SaeedAya//Wedding//EN%0D%0ABEGIN:VEVENT%0D%0AUID:saeed-aya-2026@bellahoj%0D%0ADTSTAMP:20260724T120000Z%0D%0ADTSTART:20260918T153000Z%0D%0ADTEND:20260918T213000Z%0D%0ASUMMARY:Saeed %26 Aya %E2%80%94 Wedding%0D%0ALOCATION:Bellah%C3%B8jgaard%5C%2C Bellah%C3%B8jvej 20%5C%2C 2700 K%C3%B8benhavn%0D%0AEND:VEVENT%0D%0AEND:VCALENDAR">Add to Calendar</a>
+      <!-- iOS Safari blocks top-level navigation to data: URLs (and never supported
+           `download` on them), which surfaced as "Script error" in in-app browsers.
+           Linking to a real .ics file instead: Safari opens it and offers "Add All to
+           Calendar". A copy of this file sits BOTH at the site root and in /invites/,
+           so this same relative href resolves correctly from either location.
+           No `download` attribute on purpose — with it, iOS saves to Files instead of
+           offering the calendar sheet. -->
+      <a class="link-btn" data-i18n="calBtn" type="text/calendar" href="saeed-aya-wedding.ics">Add to Calendar</a>
     </div>
   </section>
 
@@ -927,6 +955,17 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
           </div>
           <button type="submit" class="rsvp-submit" id="rsvp-submit" data-i18n="rsvpFormSubmit">Send RSVP</button>
         </form>
+        <!-- standing adults-only note: shown to everyone reading the RSVP, not just
+             those who have already submitted. Sits AFTER </form> so build_index.py's
+             form-stripping still works, and BEFORE the status comment so its
+             comment+status regex stays intact. Icon is a sibling of the translated
+             span — setLang() overwrites innerHTML, so an icon inside would be wiped. -->
+        <p class="standing-note">
+          <svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>
+          </svg>
+          <span data-i18n="adultsNote">While we love and cherish children, we respectfully envision no children at the venue.</span>
+        </p>
         <!-- kept OUTSIDE the form: the form is hidden on success, and anything
              inside it would be hidden along with it -->
         <div class="rsvp-status" id="rsvp-status" role="status" aria-live="polite"></div>
@@ -985,7 +1024,7 @@ const STR = {
     rsvpFormSuccess:"Thank you — your RSVP has been received with love.",
     rsvpPersonalOnly:"RSVP is made through your personal invitation link. Please use the link we sent you — or reach us below and we'll gladly help.",
     adultsNote:"While we love and cherish children, we respectfully envision no children at the venue.",
-    phonesNote:"Be with us, not behind a screen. We'd love to see your faces during the ceremony, so we kindly ask that phones stay tucked away — our photographer will capture every moment, and we'll share them with you afterwards.",
+    phonesNote:"Be with us, not behind a screen. So we kindly ask that phones stay tucked away — our photographer will capture every moment, and we'll share them with you afterwards.",
     rsvpConfirmTitle:"Thank you!",
     rsvpConfirmAccept:"Your response is received — we have you down for {n} of {max}. We can't wait to celebrate with you.",
     rsvpConfirmDecline:"Your response is received. We'll miss you dearly, but thank you for letting us know.",
@@ -1000,7 +1039,7 @@ const STR = {
   },
   da:{
     envLine:"Sammen med vores familier<br>ønsker vi fornøjelsen<br>af jeres selskab",
-    envTo:"<span class=\"env-to-label\">Med venlig hilsen til</span><span class=\"family-name\">Sahra &amp; Hamdi (2)</span>",
+    envTo:"<span class=\"env-to-label\">Hjerteligt inviteret</span><span class=\"family-name\">Sahra &amp; Hamdi (2)</span>",
     envHint:"Tryk på seglet — lad festen begynde",
     gettingMarried:"Med glæde i hjertet inviterer vi jer<br>til at fejre, at",
     becomeOne:"Bliver forenet ved Hans nåde (SWT)",
@@ -1010,7 +1049,7 @@ const STR = {
     yearWord:"Fredag<br>2026",
     heldAt:"Det finder sted på",
     addressTime:"Bellahøjvej 20 · 2700 København",
-    eventTime:"klokken 17.30",
+    eventTime:"kl. 17.30",
     rsvpTitle:"Svar udbedes",
     rsvpText:"Svar venligst senest den 21. august 2026",
     rsvpFormName:"Invitation til",
@@ -1018,12 +1057,12 @@ const STR = {
     rsvpFormYes:"Kommer med glæde",
     rsvpFormNo:"Kan desværre ikke deltage",
     rsvpFormGuests:"Antal deltagere, inklusiv dig selv (op til 2)",
-    rsvpFormMessage:"Besked eller kostønsker (valgfrit)",
+    rsvpFormMessage:"Kostallergi eller særlige kostønsker (valgfrit)",
     rsvpFormSubmit:"Send svar",
     rsvpFormSuccess:"Tak — dit svar er modtaget med glæde.",
     rsvpPersonalOnly:"Svar afgives via jeres personlige invitationslink. Brug venligst det link, vi har sendt jer — eller kontakt os nedenfor, så hjælper vi gerne.",
     adultsNote:"Selvom vi holder meget af børn, forestiller vi os respektfuldt ingen børn på stedet.",
-    phonesNote:"Vær til stede med os — ikke bag en skærm. Vi vil så gerne se jeres ansigter under ceremonien, så vi beder jer venligst lægge telefonen væk. Vores fotograf fanger hvert øjeblik, og vi deler billederne med jer bagefter.",
+    phonesNote:"Vær til stede med os — ikke bag en skærm, så vi beder jer venligst lægge telefonen væk. Vores fotograf fanger hvert øjeblik, og vi deler billederne med jer bagefter.",
     rsvpConfirmTitle:"Tak!",
     rsvpConfirmAccept:"Dit svar er modtaget — vi har noteret {n} ud af {max}. Vi glæder os til at fejre med jer.",
     rsvpConfirmDecline:"Dit svar er modtaget. Vi vil savne jer, men tak fordi I gav besked.",
@@ -1059,7 +1098,7 @@ const STR = {
     rsvpFormSuccess:"مننه — ستاسو ځواب په مینه ترلاسه شو.",
     rsvpPersonalOnly:"ځواب ورکول ستاسو د شخصي بلنې لینک له لارې کیږي. مهرباني وکړئ هغه لینک وکاروئ چې موږ درلېږلی — یا لاندې زموږ سره اړیکه ونیسئ.",
     adultsNote:"که څه هم موږ ماشومان له زړه خوښوو او درناوی ورته لرو، موږ په درنښت داسې انګیرو چې هیڅ ماشوم به په ځای کې نه وي.",
-    phonesNote:"زموږ سره اوسئ، نه د سکرین شاته. موږ غواړو د مراسمو په جریان کې ستاسو مخونه وګورو، نو په درنښت غواړو چې ټیلیفونونه پټ وساتئ — زموږ عکاس به هره شېبه ثبت کړي، او موږ به یې وروسته درسره شریک کړو.",
+    phonesNote:"زموږ سره اوسئ، نه د سکرین شاته. نو په درنښت غواړو چې ټیلیفونونه پټ وساتئ — زموږ عکاس به هره شېبه ثبت کړي، او موږ به یې وروسته درسره شریک کړو.",
     rsvpConfirmTitle:"مننه!",
     rsvpConfirmAccept:"ستاسو ځواب ترلاسه شو — موږ د {max} څخه {n} ثبت کړل. ستاسو د لیدو په تمه یو.",
     rsvpConfirmDecline:"ستاسو ځواب ترلاسه شو. ستاسو نشتوالی به راته درد وي، خو د خبر کولو مننه.",
@@ -1075,17 +1114,53 @@ const STR = {
     rsvpCall:"زنګ ووهئ"
   }
 };
+/* ---------- language availability ----------
+   Pashto is fully built and intentionally kept in place: its complete `ps:` string
+   dictionary above, its RTL styling, and its toggle button in the markup are all
+   untouched — it is simply not offered right now.
+
+   TO BRING PASHTO BACK: add 'ps' to ENABLED_LANGS below. That is the only edit.
+   Nothing else hardcodes a language list, the button is hidden rather than deleted,
+   and the separator dots are laid out from whatever is enabled — so adding or
+   removing a code here cannot leave a dangling reference or a stray '·'. */
+const ALL_LANGS     = ['en','da','ps'];
+const ENABLED_LANGS = ['en','da'];          // <-- add 'ps' here to re-enable Pashto
+
 function setLang(l){
+  /* fall back if asked for a language that is disabled or has no strings, so a
+     stale onclick or a bookmarked state can never throw */
+  if(ENABLED_LANGS.indexOf(l) === -1 || !STR[l]) l = ENABLED_LANGS[0];
   document.documentElement.lang = l;
   document.documentElement.dir = (l === 'ps') ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const k = el.getAttribute('data-i18n');
     if(STR[l][k]!==undefined) el.innerHTML = STR[l][k];
   });
-  ['en','da','ps'].forEach(x=>{
-    document.getElementById('btn-'+x).classList.toggle('active', l===x);
+  ALL_LANGS.forEach(x=>{
+    const b = document.getElementById('btn-'+x);
+    if(b) b.classList.toggle('active', l===x);   // null-safe: button may be absent
   });
 }
+
+/* Hide toggles for disabled languages and re-lay the separator dots so exactly one
+   sits between each pair of visible buttons (no leading, trailing or doubled '·'). */
+(function applyEnabledLangs(){
+  const wrap = document.querySelector('.lang-toggle');
+  if(!wrap) return;
+  const kids = Array.prototype.slice.call(wrap.children);
+  ALL_LANGS.forEach(code=>{
+    const b = document.getElementById('btn-'+code);
+    if(b && ENABLED_LANGS.indexOf(code) === -1) b.hidden = true;
+  });
+  kids.forEach(n=>{ if(n.classList.contains('sep')) n.hidden = true; });
+  const visible = kids.filter(n=>n.tagName === 'BUTTON' && !n.hidden);
+  visible.slice(1).forEach(btn=>{
+    let n = btn.previousElementSibling;
+    while(n && !n.classList.contains('sep')) n = n.previousElementSibling;
+    if(n) n.hidden = false;
+  });
+  if(ENABLED_LANGS.length < 2) wrap.hidden = true;   // nothing to switch between
+})();
 
 /* ---------- envelope ---------- */
 const env = document.getElementById('envelope');
@@ -1294,19 +1369,25 @@ if (rsvpForm) {
         '<span class="confirm-note">' + (S.rsvpConfirmChange || STR.en.rsvpConfirmChange) + '</span>' +
         /* the adults-only note is only relevant to those actually coming */
         (attendingVal === 'no' ? '' :
-          '<span class="confirm-adults">' +
-            '<svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
-              '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>' +
-            '</svg>' +
-            '<span>' + (S.adultsNote || STR.en.adultsNote) + '</span>' +
-          '</span>' +
           '<span class="confirm-phones">' +
             '<svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
               '<path d="M9.4 4h5.2l1.2 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4.2l1.2-2Zm2.6 5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>' +
             '</svg>' +
             '<span>' + (S.phonesNote || STR.en.phonesNote) + '</span>' +
+          '</span>' +
+          '<span class="confirm-adults">' +
+            '<svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+              '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>' +
+            '</svg>' +
+            '<span>' + (S.adultsNote || STR.en.adultsNote) + '</span>' +
           '</span>');
       statusEl.className = 'rsvp-status success';
+      /* Once a response is in, the standing adults-only note has done its job — hide it
+         on both accept and decline so the confirmation card stands alone. (On accept the
+         card restates the note itself; on decline it doesn't, and none is needed.)
+         The error path below restores it, so a failed retry still shows the full form. */
+      const standing = document.querySelector('.standing-note');
+      if (standing) standing.style.display = 'none';
       /* Bring the confirmation into view. Purely cosmetic — must never be able to
          throw, or a successful RSVP would fall through to the error handler. */
       try {
@@ -1317,6 +1398,8 @@ if (rsvpForm) {
     }).catch(() => {
       /* restore heading, deadline and form so the guest can actually retry */
       rsvpForm.style.display = '';
+      const sn = document.querySelector('.standing-note');
+      if (sn) sn.style.display = '';
       const dl = document.getElementById('rsvp-deadline');
       if (dl) dl.style.display = '';
       const tt = document.getElementById('rsvp-title');
