@@ -26,8 +26,8 @@
   --ivory:#fdf7ee;
   --sky:#d8e2f0;
   --sky-rose:#f4dcd8;
-  --gold:#d9a94f;
-  --gold-soft:#ecd39a;
+  --gold:#d4af37;
+  --gold-soft:#f2d270;
   --sage:#7d8a6d;
   --sage-active:#5e6a50;
   --sage-soft:#aab597;
@@ -323,25 +323,65 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
   100%{transform:translateY(108vh) rotate(340deg)}
 }
 /* fireworks on envelope open */
+.fw-rocket{
+  position:fixed;z-index:54;pointer-events:none;
+  width:3px;height:var(--tail,80px);border-radius:3px;
+  background:linear-gradient(to bottom,#fffdf0,rgba(255,214,120,.55),rgba(255,190,90,0));
+  box-shadow:0 0 10px rgba(255,222,150,.95);
+  transform-origin:50% 100%;
+  animation:rocketRise var(--rdur,.6s) cubic-bezier(.25,.6,.4,1) forwards;
+}
+@keyframes rocketRise{
+  0%  {transform:translateY(var(--rise,60vh)) scaleY(.45);opacity:0}
+  12% {opacity:1}
+  82% {opacity:1}
+  100%{transform:translateY(0) scaleY(1);opacity:0}
+}
+.fw-ring{
+  position:fixed;z-index:54;pointer-events:none;border-radius:50%;
+  border:2px solid rgba(255,242,205,.9);
+  animation:ringOut .8s cubic-bezier(.1,.72,.3,1) forwards;
+}
+@keyframes ringOut{
+  0%  {width:8px;height:8px;opacity:.9;transform:translate(-50%,-50%)}
+  100%{width:var(--ring,220px);height:var(--ring,220px);opacity:0;transform:translate(-50%,-50%)}
+}
 .fw-spark{
   position:fixed;z-index:55;pointer-events:none;
-  width:6px;height:6px;border-radius:50%;
-  animation:sparkFly var(--dur,1.3s) cubic-bezier(.12,.66,.36,1) forwards;
+  height:3px;width:var(--len,20px);border-radius:3px;
+  transform-origin:0 50%;
+  animation:sparkFly var(--dur,1.5s) cubic-bezier(.08,.72,.26,1) forwards,
+            sparkFlicker .17s steps(2,end) infinite;
 }
 @keyframes sparkFly{
-  0%{transform:translate(0,0) scale(1);opacity:1}
-  65%{opacity:1}
-  100%{transform:translate(var(--dx,0px),var(--dy,0px)) scale(.25);opacity:0}
+  0%  {transform:rotate(var(--rot,0deg)) translateX(0) scaleX(.3);opacity:1}
+  10% {opacity:1}
+  68% {opacity:1}
+  100%{transform:rotate(var(--rot2,0deg)) translateX(var(--dist,160px)) scaleX(1.1);opacity:0}
 }
+@keyframes sparkFlicker{0%,100%{filter:brightness(1)}50%{filter:brightness(1.85)}}
+.fw-glitter{
+  position:fixed;z-index:55;pointer-events:none;
+  width:3px;height:3px;border-radius:50%;
+  animation:glitterFall var(--gdur,2s) ease-in forwards,
+            glitterTwinkle .34s ease-in-out infinite;
+}
+@keyframes glitterFall{
+  0%  {transform:translate(0,0);opacity:0}
+  12% {opacity:1}
+  100%{transform:translate(var(--gx,0px),var(--gy,150px));opacity:0}
+}
+@keyframes glitterTwinkle{0%,100%{opacity:.2}50%{opacity:1}}
 .fw-flash{
   position:fixed;z-index:54;pointer-events:none;border-radius:50%;
-  width:14px;height:14px;
-  background:radial-gradient(circle,#fff 0%,rgba(255,240,200,.8) 40%,transparent 70%);
-  animation:flashPop .5s ease-out forwards;
+  width:18px;height:18px;
+  background:radial-gradient(circle,#fff 0%,rgba(255,244,210,.9) 35%,rgba(255,214,120,.35) 60%,transparent 75%);
+  animation:flashPop .55s ease-out forwards;
 }
 @keyframes flashPop{
-  0%{transform:scale(.4);opacity:1}
-  100%{transform:scale(5);opacity:0}
+  0%  {transform:translate(-50%,-50%) scale(.3);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(9);opacity:0}
+}
 }
 
 /* ============ invitation wording ============ */
@@ -423,6 +463,15 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .confirm-title{font-size:1.4rem;font-weight:600;letter-spacing:.02em}
 .confirm-detail{font-size:1.08rem;line-height:1.6;font-weight:500}
 .confirm-note{font-size:.9rem;line-height:1.5;color:#2f5d3a;opacity:.85;margin-top:6px}
+.confirm-adults{
+  display:flex;align-items:flex-start;gap:11px;text-align:left;
+  width:100%;margin-top:20px;padding:16px 18px;
+  background:var(--notice-bg);
+  border:1px solid var(--notice-border);border-left:5px solid var(--notice-border);
+  border-radius:3px;
+  color:var(--notice-text);font-weight:600;font-size:1.02rem;line-height:1.6;
+}
+.adults-icon{width:21px;height:21px;flex:none;margin-top:1px}
 .rsvp-status.error{
   color:#7a2e22;background:#fbe6e2;border:1px solid #a8402f;border-left:5px solid #a8402f;
   border-radius:3px;padding:16px 18px;font-weight:600;
@@ -433,8 +482,9 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 /* standalone contact section — deliberately unrelated to the RSVP card */
 .contact{
   max-width:none;padding:64px 26px;text-align:center;
-  background:var(--ivory);
-  border-top:1px solid rgba(176,141,87,.25);
+  /* sits between the details section (which ends in blush) and the footer
+     (which begins in blush) — keep the wash continuous */
+  background:var(--blush);
 }
 .contact-inner{max-width:460px;margin:0 auto}
 .contact h3{
@@ -581,51 +631,93 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
     <div class="hero-lace" aria-hidden="true">
       <svg preserveAspectRatio="none">
         <defs>
-          <pattern id="laceNet" width="7" height="7" patternUnits="userSpaceOnUse">
-            <circle cx="1.2" cy="1.2" r=".7" fill="#ffffff" opacity=".55"/>
-          </pattern>
-          <g id="laceRoseM">
-            <g fill="none" stroke="#ffffff" stroke-width="2">
-              <circle cx="8" cy="0" r="6.5"/><circle cx="4" cy="6.9" r="6.5"/><circle cx="-4" cy="6.9" r="6.5"/>
-              <circle cx="-8" cy="0" r="6.5"/><circle cx="-4" cy="-6.9" r="6.5"/><circle cx="4" cy="-6.9" r="6.5"/>
-              <circle cx="0" cy="0" r="4.2"/>
-            </g>
-            <circle r="1.6" fill="#ffffff"/>
-          </g>
-          <g id="laceFloret">
-            <g fill="none" stroke="#ffffff" stroke-width="1.6">
-              <circle cx="4.2" cy="0" r="3.2"/><circle cx="1.3" cy="4" r="3.2"/><circle cx="-3.4" cy="2.5" r="3.2"/>
-              <circle cx="-3.4" cy="-2.5" r="3.2"/><circle cx="1.3" cy="-4" r="3.2"/>
-            </g>
-            <circle r="1.3" fill="#ffffff"/>
-          </g>
-          <g id="laceLeaf">
-            <ellipse rx="7" ry="2.6" fill="none" stroke="#ffffff" stroke-width="1.5"/>
-            <line x1="-6" y1="0" x2="6" y2="0" stroke="#ffffff" stroke-width=".8"/>
-          </g>
-          <g id="laceCluster">
-            <path d="M0 6 C14 24 20 44 14 66" fill="none" stroke="#ffffff" stroke-width="1.4"/>
-            <path d="M2 8 C-14 22 -20 40 -12 60" fill="none" stroke="#ffffff" stroke-width="1.2"/>
-            <use href="#laceRoseM"/>
-            <use href="#laceFloret" transform="translate(16 40)"/>
-            <use href="#laceFloret" transform="translate(-15 34) scale(.9)"/>
-            <use href="#laceLeaf" transform="translate(8 24) rotate(58)"/>
-            <use href="#laceLeaf" transform="translate(-9 20) rotate(-55)"/>
-            <use href="#laceLeaf" transform="translate(15 54) rotate(75)"/>
-            <circle cx="-14" cy="48" r="1.2" fill="#ffffff"/><circle cx="20" cy="58" r="1.2" fill="#ffffff"/><circle cx="-2" cy="66" r="1.2" fill="#ffffff"/>
-          </g>
-          <pattern id="laceTile" width="260" height="260" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
-            <rect width="260" height="260" fill="url(#laceNet)" opacity=".3"/>
-            <use href="#laceCluster" transform="translate(66 76) rotate(-12)"/>
-            <use href="#laceCluster" transform="translate(198 202) rotate(158) scale(.85)"/>
-            <use href="#laceFloret" transform="translate(192 62) rotate(20) scale(1.15)"/>
-            <use href="#laceLeaf" transform="translate(44 196) rotate(32)"/>
-            <use href="#laceLeaf" transform="translate(220 118) rotate(-40) scale(.9)"/>
-            <circle cx="140" cy="140" r="1.3" fill="#ffffff"/>
-            <circle cx="30" cy="240" r="1.3" fill="#ffffff"/>
-            <circle cx="245" cy="30" r="1.3" fill="#ffffff"/>
-          </pattern>
-        </defs>
+      <!-- fine tulle ground: the diamond mesh a real Chantilly net is worked on -->
+      <pattern id="laceNet" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+        <path d="M0 0 L9 9 M9 0 L0 9" stroke="#ffffff" stroke-width=".45" opacity=".5" fill="none"/>
+      </pattern>
+
+      <!-- layered cabbage rose, filled like the embroidered blooms in the fabric -->
+      <g id="laceRose">
+        <g fill="#ffffff" stroke="#efe3d6" stroke-width=".5">
+          <path d="M0 0 C6.67 -3.85 12.52 -3.01 14.00 0.00 C12.52 3.01 6.67 3.85 0 0 Z"/>
+          <path d="M0 0 C7.17 2.81 10.16 7.92 8.73 10.95 C5.46 11.67 1.15 7.61 0 0 Z"/>
+          <path d="M0 0 C2.27 7.36 0.14 12.88 -3.12 13.65 C-5.72 11.54 -5.24 5.64 0 0 Z"/>
+          <path d="M0 0 C-4.34 6.36 -9.98 8.14 -12.61 6.07 C-12.59 2.73 -7.68 -0.58 0 0 Z"/>
+          <path d="M0 0 C-7.68 0.58 -12.59 -2.73 -12.61 -6.07 C-9.98 -8.14 -4.34 -6.36 0 0 Z"/>
+          <path d="M0 0 C-5.24 -5.64 -5.72 -11.54 -3.12 -13.65 C0.14 -12.88 2.27 -7.36 0 0 Z"/>
+          <path d="M0 0 C1.15 -7.61 5.46 -11.67 8.73 -10.95 C10.16 -7.92 7.17 -2.81 0 0 Z"/>
+        </g>
+        <g fill="#ffffff" stroke="#e9dbcb" stroke-width=".5">
+          <path d="M0 0 C5.01 -0.70 8.32 1.57 8.27 4.03 C6.36 5.59 2.53 4.38 0 0 Z"/>
+          <path d="M0 0 C2.22 4.55 1.08 8.40 -1.28 9.11 C-3.35 7.77 -3.39 3.76 0 0 Z"/>
+          <path d="M0 0 C-3.64 3.51 -7.65 3.62 -9.06 1.60 C-8.43 -0.78 -4.62 -2.06 0 0 Z"/>
+          <path d="M0 0 C-4.47 -2.38 -5.80 -6.16 -4.32 -8.12 C-1.86 -8.26 0.53 -5.03 0 0 Z"/>
+          <path d="M0 0 C0.88 -4.98 4.06 -7.42 6.39 -6.62 C7.28 -4.32 4.95 -1.05 0 0 Z"/>
+        </g>
+        <g fill="#ffffff" stroke="#e2d2be" stroke-width=".45">
+          <path d="M0 0 C2.95 0.36 4.39 2.32 3.82 3.82 C2.32 4.39 0.36 2.95 0 0 Z"/>
+          <path d="M0 0 C-0.36 2.95 -2.32 4.39 -3.82 3.82 C-4.39 2.32 -2.95 0.36 0 0 Z"/>
+          <path d="M0 0 C-2.95 -0.36 -4.39 -2.32 -3.82 -3.82 C-2.32 -4.39 -0.36 -2.95 0 0 Z"/>
+          <path d="M0 0 C0.36 -2.95 2.32 -4.39 3.82 -3.82 C4.39 -2.32 2.95 -0.36 0 0 Z"/>
+        </g>
+        <path d="M0.60 0 L0.43 0.74 L-0.18 1.00 L-0.91 0.76 L-1.36 0 L-1.17 -0.98 L-0.29 -1.67 L0.93 -1.61 L1.91 -0.69 L2.06 0.75 L1.18 2.05 L-0.44 2.49 L-2.07 1.74"
+              fill="none" stroke="#d9c6ad" stroke-width=".7"/>
+      </g>
+
+      <!-- lance-shaped leaf with a centre vein, as in the fabric -->
+      <g id="laceLeaf">
+        <path d="M0 0 C4.5 -3.6 10.5 -3.2 13 0 C10.5 3.2 4.5 3.6 0 0 Z" fill="#ffffff" stroke="#e6d8c6" stroke-width=".5"/>
+        <path d="M0.8 0 L12 0" stroke="#dcc9b0" stroke-width=".55" fill="none"/>
+        <path d="M3.4 0 L5.2 -1.9 M6.2 0 L8 -1.7 M3.4 0 L5.2 1.9 M6.2 0 L8 1.7" stroke="#e3d3bd" stroke-width=".4" fill="none"/>
+      </g>
+
+      <!-- small filler floret -->
+      <g id="laceFloret">
+        <g fill="#ffffff" stroke="#e9dbcb" stroke-width=".45">
+          <ellipse cx="3.6" cy="0" rx="3.4" ry="2.3"/>
+          <ellipse cx="1.1" cy="3.4" rx="3.4" ry="2.3" transform="rotate(72 1.1 3.4)"/>
+          <ellipse cx="-2.9" cy="2.1" rx="3.4" ry="2.3" transform="rotate(144 -2.9 2.1)"/>
+          <ellipse cx="-2.9" cy="-2.1" rx="3.4" ry="2.3" transform="rotate(216 -2.9 -2.1)"/>
+          <ellipse cx="1.1" cy="-3.4" rx="3.4" ry="2.3" transform="rotate(288 1.1 -3.4)"/>
+        </g>
+        <circle r="1.5" fill="#ffffff" stroke="#dcc9b0" stroke-width=".45"/>
+      </g>
+
+      <!-- teardrop bud on a short stem -->
+      <g id="laceBud">
+        <path d="M0 0 C3 -1.2 6.2 .4 6 3 C5.8 5.4 2.6 6.4 0 5 Z" fill="#ffffff" stroke="#e6d8c6" stroke-width=".5"/>
+        <path d="M0 5 C-2 6.5 -3.4 8.6 -3.8 11" fill="none" stroke="#dcc9b0" stroke-width=".6"/>
+      </g>
+
+      <!-- a full spray: rose, leaves, buds and scrolling stems -->
+      <g id="laceSpray">
+        <path d="M0 12 C8 26 10 44 4 62" fill="none" stroke="#dcc9b0" stroke-width=".85"/>
+        <path d="M-2 12 C-12 24 -16 40 -10 58" fill="none" stroke="#e0cfb6" stroke-width=".7"/>
+        <path d="M4 40 C14 44 20 52 21 62" fill="none" stroke="#e2d2bb" stroke-width=".6"/>
+        <use href="#laceRose"/>
+        <use href="#laceFloret" transform="translate(14 38) scale(1.05)"/>
+        <use href="#laceFloret" transform="translate(-13 34) scale(.85)"/>
+        <use href="#laceBud"    transform="translate(6 56) rotate(58) scale(.95)"/>
+        <use href="#laceBud"    transform="translate(-12 50) rotate(128) scale(.8)"/>
+        <use href="#laceLeaf"   transform="translate(7 22) rotate(52) scale(.9)"/>
+        <use href="#laceLeaf"   transform="translate(-8 20) rotate(-132) scale(.85)"/>
+        <use href="#laceLeaf"   transform="translate(12 50) rotate(74) scale(.8)"/>
+        <use href="#laceLeaf"   transform="translate(-6 62) rotate(-108) scale(.75)"/>
+      </g>
+
+      <pattern id="laceTile" width="260" height="260" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
+        <rect width="260" height="260" fill="url(#laceNet)" opacity=".45"/>
+        <use href="#laceSpray" transform="translate(64 46) rotate(-10)"/>
+        <use href="#laceSpray" transform="translate(196 176) rotate(168) scale(.9)"/>
+        <use href="#laceRose"   transform="translate(198 58) scale(.7) rotate(24)"/>
+        <use href="#laceRose"   transform="translate(58 190) scale(.62) rotate(-38)"/>
+        <use href="#laceFloret" transform="translate(132 122) scale(1.1)"/>
+        <use href="#laceLeaf"   transform="translate(150 210) rotate(28) scale(.9)"/>
+        <use href="#laceLeaf"   transform="translate(228 132) rotate(-46) scale(.8)"/>
+        <use href="#laceBud"    transform="translate(24 118) rotate(-70) scale(.85)"/>
+        <use href="#laceBud"    transform="translate(242 232) rotate(40) scale(.8)"/>
+      </pattern>
+    </defs>
         <rect width="100%" height="100%" fill="url(#laceTile)"/>
       </svg>
     </div>
@@ -709,6 +801,24 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
       <div class="hero-rings reveal" aria-hidden="true">
         <svg viewBox="24 30 73 63">
           <defs>
+            <linearGradient id="goldBand" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0"    stop-color="#8a6410"/>
+              <stop offset=".18"  stop-color="#d9ac36"/>
+              <stop offset=".38"  stop-color="#ffe89a"/>
+              <stop offset=".52"  stop-color="#f0c74e"/>
+              <stop offset=".72"  stop-color="#b8860b"/>
+              <stop offset=".88"  stop-color="#f2d270"/>
+              <stop offset="1"    stop-color="#7d5a0d"/>
+            </linearGradient>
+            <linearGradient id="silverBand" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0"    stop-color="#7f8792"/>
+              <stop offset=".18"  stop-color="#c3cad4"/>
+              <stop offset=".38"  stop-color="#ffffff"/>
+              <stop offset=".52"  stop-color="#dfe4ea"/>
+              <stop offset=".72"  stop-color="#9aa2ae"/>
+              <stop offset=".88"  stop-color="#eef1f5"/>
+              <stop offset="1"    stop-color="#767e89"/>
+            </linearGradient>
             <linearGradient id="gemFace" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0"   stop-color="#ffffff"/>
               <stop offset=".38" stop-color="#eaf3fb"/>
@@ -730,7 +840,7 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
           </defs>
 
           <g>
-            <circle cx="49.88" cy="68.62" r="16.5" fill="none" stroke="#d9a94f" stroke-width="3.3"/>
+            <circle cx="49.88" cy="68.62" r="16.5" fill="none" stroke="url(#goldBand)" stroke-width="3.6"/>
 
             <!-- halo behind the stone -->
             <ellipse class="gem-halo" cx="41" cy="49" rx="13" ry="12" fill="#ffffff" opacity=".35"/>
@@ -758,12 +868,12 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
             <path class="gem-spark s4" d="M45.4 57.2 l.85 2.15 2.15 .85 -2.15 .85 -.85 2.15 -.85 -2.15 -2.15 -.85 2.15 -.85 Z"
                   fill="#ffffff" filter="url(#gemGlow)"/>
           </g>
-          <circle cx="71.88" cy="68.62" r="16.5" fill="none" stroke="#b9bfc9" stroke-width="3.3"/>
+          <circle cx="71.88" cy="68.62" r="16.5" fill="none" stroke="url(#silverBand)" stroke-width="3.6"/>
         </svg>
       </div>
       <h1 class="hero-names script reveal">Saeed <span class="hero-amp">&amp;</span> Aya</h1>
       <p class="hero-tag caps reveal" data-i18n="becomeOne">Are joined by His grace (SWT)</p>
-      <p class="hero-date reveal" data-i18n="heroDate">18 · 09 · 2026 · 17.30 — Copenhagen</p>
+      <p class="hero-date reveal" data-i18n="heroDate">18 · 09 · 2026 — Copenhagen</p>
     </div>
     <div class="scroll-cue">︾</div>
   </section>
@@ -788,7 +898,7 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
   <section class="details">
         <div class="details-inner">
       <div class="detail-block reveal">
-        <h3 data-i18n="rsvpTitle">RSVP</h3>
+        <h3 id="rsvp-title" data-i18n="rsvpTitle">RSVP</h3>
         <p class="rsvp-deadline" id="rsvp-deadline" data-i18n="rsvpText">Kindly respond by 21 August 2026</p>
 
         <form class="rsvp-form" id="rsvp-form">
@@ -855,7 +965,7 @@ const STR = {
     envHint:"Tap the seal — let the celebration begin",
     gettingMarried:"With joyful hearts, we invite you<br>to celebrate as",
     becomeOne:"Are joined by His grace (SWT)",
-    heroDate:"18 · 09 · 2026 · 17.30 — Copenhagen",
+    heroDate:"18 · 09 · 2026 — Copenhagen",
     requestLine:"We request the pleasure of your company<br>to celebrate the wedding on",
     month:"September",
     yearWord:"Friday<br>2026",
@@ -873,6 +983,7 @@ const STR = {
     rsvpFormSubmit:"Send RSVP",
     rsvpFormSuccess:"Thank you — your RSVP has been received with love.",
     rsvpPersonalOnly:"RSVP is made through your personal invitation link. Please use the link we sent you — or reach us below and we'll gladly help.",
+    adultsNote:"While we love and cherish children, we respectfully envision no children at the venue.",
     rsvpConfirmTitle:"Thank you!",
     rsvpConfirmAccept:"Your response is received — we have you down for {n} of {max}. We can't wait to celebrate with you.",
     rsvpConfirmDecline:"Your response is received. We'll miss you dearly, but thank you for letting us know.",
@@ -891,7 +1002,7 @@ const STR = {
     envHint:"Tryk på seglet — lad festen begynde",
     gettingMarried:"Med glæde i hjertet inviterer vi jer<br>til at fejre, at",
     becomeOne:"Bliver forenet ved Hans nåde (SWT)",
-    heroDate:"18 · 09 · 2026 · 17.30 — København",
+    heroDate:"18 · 09 · 2026 — København",
     requestLine:"Vi ønsker fornøjelsen af jeres selskab<br>til at fejre brylluppet",
     month:"September",
     yearWord:"Fredag<br>2026",
@@ -909,6 +1020,7 @@ const STR = {
     rsvpFormSubmit:"Send svar",
     rsvpFormSuccess:"Tak — dit svar er modtaget med glæde.",
     rsvpPersonalOnly:"Svar afgives via jeres personlige invitationslink. Brug venligst det link, vi har sendt jer — eller kontakt os nedenfor, så hjælper vi gerne.",
+    adultsNote:"Selvom vi holder meget af børn, forestiller vi os respektfuldt ingen børn på stedet.",
     rsvpConfirmTitle:"Tak!",
     rsvpConfirmAccept:"Dit svar er modtaget — vi har noteret {n} ud af {max}. Vi glæder os til at fejre med jer.",
     rsvpConfirmDecline:"Dit svar er modtaget. Vi vil savne jer, men tak fordi I gav besked.",
@@ -927,7 +1039,7 @@ const STR = {
     envHint:"پر مهر ګوته کېږدئ — لمانځنه پیل شي",
     gettingMarried:"په خوښۍ او مینه سره تاسو ته بلنه درکوو<br>چې زموږ سره یوځای شئ",
     becomeOne:"د هغه په فضل سره یوځای کېږو (SWT)",
-    heroDate:"۱۸ · ۰۹ · ۲۰۲۶ · ۱۷:۳۰ — کوپنهاګن",
+    heroDate:"۱۸ · ۰۹ · ۲۰۲۶ — کوپنهاګن",
     requestLine:"د سعید او آیه د واده د لمانځنې لپاره<br>ستاسو د شتون هیله لرو",
     month:"سپتمبر",
     yearWord:"جمعه<br>۲۰۲۶",
@@ -943,6 +1055,7 @@ const STR = {
     rsvpFormSubmit:"ځواب ولېږئ",
     rsvpFormSuccess:"مننه — ستاسو ځواب په مینه ترلاسه شو.",
     rsvpPersonalOnly:"ځواب ورکول ستاسو د شخصي بلنې لینک له لارې کیږي. مهرباني وکړئ هغه لینک وکاروئ چې موږ درلېږلی — یا لاندې زموږ سره اړیکه ونیسئ.",
+    adultsNote:"که څه هم موږ ماشومان له زړه خوښوو او درناوی ورته لرو، موږ په درنښت داسې انګیرو چې هیڅ ماشوم به په ځای کې نه وي.",
     rsvpConfirmTitle:"مننه!",
     rsvpConfirmAccept:"ستاسو ځواب ترلاسه شو — موږ د {max} څخه {n} ثبت کړل. ستاسو د لیدو په تمه یو.",
     rsvpConfirmDecline:"ستاسو ځواب ترلاسه شو. ستاسو نشتوالی به راته درد وي، خو د خبر کولو مننه.",
@@ -988,42 +1101,87 @@ function openInvite(){
 }
 function launchFireworks(){
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const palettes=[
-    ['#ffd97a','#ffe9b0','#fff6e2'],            /* gold */
-    ['#f2b7a6','#f8d3c6','#ffffff'],            /* blush */
-    ['#c3cfa8','#dde5c9','#fffdf2'],            /* sage */
-    ['#f0c6d8','#ffd97a','#ffffff']             /* rose-gold mix */
+
+  const palettes = [
+    ['#ffd75e','#ffefb0','#fffaf0'],
+    ['#ff9d7e','#ffc9b0','#fff3ea'],
+    ['#ffd75e','#fff0c0','#ffb27a'],
+    ['#f7a8c4','#ffd3e2','#fffafc'],
+    ['#c9dfa6','#e6f0cd','#fdfff2']
   ];
-  const bursts=6;
-  for(let b=0;b<bursts;b++){
-    setTimeout(()=>{
-      const x = 12 + Math.random()*76;             /* vw */
-      const y = 8 + Math.random()*38;              /* vh */
-      const colors = palettes[b%palettes.length];
-      const flash=document.createElement('div');
-      flash.className='fw-flash';
-      flash.style.left=x+'vw'; flash.style.top=y+'vh';
-      document.body.appendChild(flash);
-      setTimeout(()=>flash.remove(),600);
-      const sparks = 22 + Math.floor(Math.random()*8);
-      for(let i=0;i<sparks;i++){
-        const s=document.createElement('div');
-        s.className='fw-spark';
-        const angle = (Math.PI*2*i)/sparks + Math.random()*.25;
-        const dist = 60 + Math.random()*90;
-        s.style.left=x+'vw'; s.style.top=y+'vh';
-        s.style.background=colors[i%colors.length];
-        s.style.boxShadow='0 0 8px '+colors[i%colors.length];
-        s.style.setProperty('--dx', (Math.cos(angle)*dist)+'px');
-        s.style.setProperty('--dy', (Math.sin(angle)*dist + 45)+'px'); /* slight gravity */
-        s.style.setProperty('--dur', (1.1+Math.random()*.7)+'s');
-        s.style.width=s.style.height=(4+Math.random()*4)+'px';
-        document.body.appendChild(s);
-        setTimeout(()=>s.remove(), 2200);
-      }
-    }, b*380);
+
+  function burst(x, y, colors){
+    const flash = document.createElement('div');
+    flash.className = 'fw-flash';
+    flash.style.left = x+'vw'; flash.style.top = y+'vh';
+    document.body.appendChild(flash);
+    setTimeout(function(){ flash.remove(); }, 700);
+
+    const ring = document.createElement('div');
+    ring.className = 'fw-ring';
+    ring.style.left = x+'vw'; ring.style.top = y+'vh';
+    ring.style.setProperty('--ring', (180 + Math.random()*120)+'px');
+    ring.style.borderColor = colors[1];
+    document.body.appendChild(ring);
+    setTimeout(function(){ ring.remove(); }, 950);
+
+    const sparks = 40 + Math.floor(Math.random()*14);
+    for(let i=0;i<sparks;i++){
+      const s = document.createElement('div');
+      s.className = 'fw-spark';
+      const deg  = (360*i)/sparks + Math.random()*6;
+      const dist = 120 + Math.random()*130;
+      const col  = colors[i % colors.length];
+      s.style.left = x+'vw'; s.style.top = y+'vh';
+      s.style.background = 'linear-gradient(to left, '+col+', rgba(255,255,255,0))';
+      s.style.boxShadow  = '0 0 9px '+col+', 0 0 18px '+col;
+      s.style.setProperty('--rot',  deg+'deg');
+      s.style.setProperty('--rot2', (deg + ((deg>0 && deg<180) ? 26 : -26))+'deg');
+      s.style.setProperty('--dist', dist+'px');
+      s.style.setProperty('--len',  (16 + Math.random()*16)+'px');
+      s.style.setProperty('--dur',  (1.25 + Math.random()*0.75)+'s');
+      document.body.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 2400);
+    }
+
+    for(let g=0; g<16; g++){
+      const el = document.createElement('div');
+      el.className = 'fw-glitter';
+      const col = colors[g % colors.length];
+      el.style.left = x+'vw'; el.style.top = y+'vh';
+      el.style.background = col;
+      el.style.boxShadow  = '0 0 7px '+col;
+      el.style.setProperty('--gx', ((Math.random()-0.5)*220)+'px');
+      el.style.setProperty('--gy', (110 + Math.random()*190)+'px');
+      el.style.setProperty('--gdur', (1.7 + Math.random()*1.2)+'s');
+      el.style.animationDelay = (0.25 + Math.random()*0.35)+'s';
+      document.body.appendChild(el);
+      setTimeout(function(){ el.remove(); }, 3400);
+    }
+  }
+
+  const shells = 5;
+  for(let b=0;b<shells;b++){
+    setTimeout(function(){
+      const x    = 14 + Math.random()*72;
+      const y    = 10 + Math.random()*32;
+      const rise = 42 + Math.random()*26;
+      const rdur = 0.55 + Math.random()*0.2;
+      const colors = palettes[b % palettes.length];
+
+      const rocket = document.createElement('div');
+      rocket.className = 'fw-rocket';
+      rocket.style.left = x+'vw'; rocket.style.top = y+'vh';
+      rocket.style.setProperty('--rise', rise+'vh');
+      rocket.style.setProperty('--rdur', rdur+'s');
+      rocket.style.setProperty('--tail', (60 + Math.random()*45)+'px');
+      document.body.appendChild(rocket);
+
+      setTimeout(function(){ rocket.remove(); burst(x, y, colors); }, rdur*1000);
+    }, b*430);
   }
 }
+
 /* Set to true to bring back the tap-to-open envelope; false shows the invitation immediately */
 const ENVELOPE_ENABLED = true;
 /* Set to true to have returning guests skip straight past the envelope on repeat visits */
@@ -1115,9 +1273,11 @@ if (rsvpForm) {
       body: body.toString()
     }).then(() => {
       rsvpForm.style.display = 'none';
-      /* the deadline prompt is redundant once they've responded — hide it too */
+      /* heading and deadline are redundant once they've responded — hide them too */
       const deadlineEl = document.getElementById('rsvp-deadline');
       if (deadlineEl) deadlineEl.style.display = 'none';
+      const titleEl = document.getElementById('rsvp-title');
+      if (titleEl) titleEl.style.display = 'none';
       const S = STR[lang] || STR.en;
       const detail = (attendingVal === 'no')
         ? (S.rsvpConfirmDecline || STR.en.rsvpConfirmDecline)
@@ -1127,7 +1287,15 @@ if (rsvpForm) {
         '<span class="confirm-mark" aria-hidden="true">&#10003;</span>' +
         '<strong class="confirm-title">' + (S.rsvpConfirmTitle || STR.en.rsvpConfirmTitle) + '</strong>' +
         '<span class="confirm-detail">' + detail + '</span>' +
-        '<span class="confirm-note">' + (S.rsvpConfirmChange || STR.en.rsvpConfirmChange) + '</span>';
+        '<span class="confirm-note">' + (S.rsvpConfirmChange || STR.en.rsvpConfirmChange) + '</span>' +
+        /* the adults-only note is only relevant to those actually coming */
+        (attendingVal === 'no' ? '' :
+          '<span class="confirm-adults">' +
+            '<svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+              '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>' +
+            '</svg>' +
+            '<span>' + (S.adultsNote || STR.en.adultsNote) + '</span>' +
+          '</span>');
       statusEl.className = 'rsvp-status success';
       /* Bring the confirmation into view. Purely cosmetic — must never be able to
          throw, or a successful RSVP would fall through to the error handler. */
@@ -1137,10 +1305,12 @@ if (rsvpForm) {
         }
       } catch (e) { /* ignore: scrolling is not essential */ }
     }).catch(() => {
-      /* restore the form and deadline so the guest can actually retry */
+      /* restore heading, deadline and form so the guest can actually retry */
       rsvpForm.style.display = '';
       const dl = document.getElementById('rsvp-deadline');
       if (dl) dl.style.display = '';
+      const tt = document.getElementById('rsvp-title');
+      if (tt) tt.style.display = '';
       submitBtn.disabled = false;
       statusEl.textContent = (STR[lang] && STR[lang].rsvpFormError) || STR.en.rsvpFormError;
       statusEl.className = 'rsvp-status error';
