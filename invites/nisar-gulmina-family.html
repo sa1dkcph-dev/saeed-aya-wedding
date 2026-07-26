@@ -789,7 +789,7 @@ html[dir="rtl"] .env-to .family-name{font-size:1.2rem;letter-spacing:normal;line
         <div class="details-inner">
       <div class="detail-block reveal">
         <h3 data-i18n="rsvpTitle">RSVP</h3>
-        <p class="rsvp-deadline" data-i18n="rsvpText">Kindly respond by 21 August 2026</p>
+        <p class="rsvp-deadline" id="rsvp-deadline" data-i18n="rsvpText">Kindly respond by 21 August 2026</p>
 
         <form class="rsvp-form" id="rsvp-form">
           <input type="hidden" id="rsvp-family" value="Nisar, Gulmina &amp; Family">
@@ -1115,6 +1115,9 @@ if (rsvpForm) {
       body: body.toString()
     }).then(() => {
       rsvpForm.style.display = 'none';
+      /* the deadline prompt is redundant once they've responded — hide it too */
+      const deadlineEl = document.getElementById('rsvp-deadline');
+      if (deadlineEl) deadlineEl.style.display = 'none';
       const S = STR[lang] || STR.en;
       const detail = (attendingVal === 'no')
         ? (S.rsvpConfirmDecline || STR.en.rsvpConfirmDecline)
@@ -1126,9 +1129,18 @@ if (rsvpForm) {
         '<span class="confirm-detail">' + detail + '</span>' +
         '<span class="confirm-note">' + (S.rsvpConfirmChange || STR.en.rsvpConfirmChange) + '</span>';
       statusEl.className = 'rsvp-status success';
-      /* the form collapsing shifts layout — bring the confirmation into view */
-      try{ statusEl.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ statusEl.scrollIntoView(); }
+      /* Bring the confirmation into view. Purely cosmetic — must never be able to
+         throw, or a successful RSVP would fall through to the error handler. */
+      try {
+        if (typeof statusEl.scrollIntoView === 'function') {
+          statusEl.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+      } catch (e) { /* ignore: scrolling is not essential */ }
     }).catch(() => {
+      /* restore the form and deadline so the guest can actually retry */
+      rsvpForm.style.display = '';
+      const dl = document.getElementById('rsvp-deadline');
+      if (dl) dl.style.display = '';
       submitBtn.disabled = false;
       statusEl.textContent = (STR[lang] && STR[lang].rsvpFormError) || STR.en.rsvpFormError;
       statusEl.className = 'rsvp-status error';
