@@ -420,8 +420,8 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .link-btn.call:hover{background:#5c451f}
 
 /* ---- RSVP form (primary) ---- */
-.rsvp-form{max-width:420px;margin:26px auto 0;text-align:left;display:flex;flex-direction:column;gap:20px}
-.rsvp-field label{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:8px}
+.rsvp-form{max-width:420px;margin:36px auto 0;text-align:left;display:flex;flex-direction:column;gap:26px}
+.rsvp-field label{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:11px}
 .rsvp-field input[type="text"],.rsvp-field input[type="number"],.rsvp-field textarea{
   width:100%;border:1px solid rgba(176,141,87,.4);border-radius:3px;
   background:#fffdf9;font-family:inherit;font-size:1.08rem;color:var(--ink);
@@ -463,7 +463,7 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 .confirm-title{font-size:1.4rem;font-weight:600;letter-spacing:.02em}
 .confirm-detail{font-size:1.08rem;line-height:1.6;font-weight:500}
 .confirm-note{font-size:.9rem;line-height:1.5;color:#2f5d3a;opacity:.85;margin-top:6px}
-.confirm-adults{
+.confirm-adults,.confirm-phones{
   display:flex;align-items:flex-start;gap:11px;text-align:left;
   width:100%;margin-top:20px;padding:16px 18px;
   background:var(--notice-bg);
@@ -472,6 +472,7 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
   color:var(--notice-text);font-weight:600;font-size:1.02rem;line-height:1.6;
 }
 .adults-icon{width:21px;height:21px;flex:none;margin-top:1px}
+.confirm-phones{margin-top:12px}
 .rsvp-status.error{
   color:#7a2e22;background:#fbe6e2;border:1px solid #a8402f;border-left:5px solid #a8402f;
   border-radius:3px;padding:16px 18px;font-weight:600;
@@ -507,13 +508,13 @@ section{position:relative;padding:96px 24px;max-width:560px;margin:0 auto;text-a
 /* venue scene */
 
 /* ============ details ============ */
-.details{background:linear-gradient(180deg, var(--ivory) 0%, var(--blush) 100%);max-width:none;padding:40px 24px 48px}
+.details{background:linear-gradient(180deg, var(--ivory) 0%, var(--blush) 100%);max-width:none;padding:88px 24px 80px}
 .details-inner{max-width:560px;margin:0 auto}
 .detail-block{
   margin-bottom:0;background:var(--ivory);border:1px solid rgba(176,141,87,.4);
-  border-radius:6px;padding:36px 28px;box-shadow:0 6px 20px rgba(120,90,50,.1);
+  border-radius:6px;padding:46px 34px;box-shadow:0 6px 20px rgba(120,90,50,.1);
 }
-.detail-block h3{font-size:1.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:10px;font-weight:600}
+.detail-block h3{font-size:1.5rem;letter-spacing:.22em;text-transform:uppercase;color:var(--bronze-text);margin-bottom:20px;font-weight:600}
 .detail-block .big{font-size:1.5rem;font-weight:500;color:var(--ink)}
 .detail-block p{font-size:1.18rem;line-height:1.75;color:var(--ink)}
 .rsvp-deadline{
@@ -545,7 +546,7 @@ html[dir="rtl"] .event-time{font-size:1.15rem;letter-spacing:normal;text-transfo
 html[dir="rtl"] .venue-line{font-family:'Pinyon Script',cursive}
 html[dir="rtl"] .date-lockup .side{font-size:1.08rem}
 html[dir="rtl"] .hero-tag{font-size:1.05rem}
-html[dir="rtl"] .detail-block h3{font-size:1.1rem}
+html[dir="rtl"] .detail-block h3{font-size:1.35rem;letter-spacing:normal}
 html[dir="rtl"] footer p{font-size:1rem}
 html[dir="rtl"] .env-hint{font-size:1rem;letter-spacing:normal;text-transform:none;font-family:'Noto Naskh Arabic',serif}
 html[dir="rtl"] .env-intro .script{font-family:'Noto Naskh Arabic',serif;font-size:1.35rem;line-height:2.05}
@@ -984,6 +985,7 @@ const STR = {
     rsvpFormSuccess:"Thank you — your RSVP has been received with love.",
     rsvpPersonalOnly:"RSVP is made through your personal invitation link. Please use the link we sent you — or reach us below and we'll gladly help.",
     adultsNote:"While we love and cherish children, we respectfully envision no children at the venue.",
+    phonesNote:"Be with us, not behind a screen. We'd love to see your faces during the ceremony, so we kindly ask that phones stay tucked away — our photographer will capture every moment, and we'll share them with you afterwards.",
     rsvpConfirmTitle:"Thank you!",
     rsvpConfirmAccept:"Your response is received — we have you down for {n} of {max}. We can't wait to celebrate with you.",
     rsvpConfirmDecline:"Your response is received. We'll miss you dearly, but thank you for letting us know.",
@@ -1021,6 +1023,7 @@ const STR = {
     rsvpFormSuccess:"Tak — dit svar er modtaget med glæde.",
     rsvpPersonalOnly:"Svar afgives via jeres personlige invitationslink. Brug venligst det link, vi har sendt jer — eller kontakt os nedenfor, så hjælper vi gerne.",
     adultsNote:"Selvom vi holder meget af børn, forestiller vi os respektfuldt ingen børn på stedet.",
+    phonesNote:"Vær til stede med os — ikke bag en skærm. Vi vil så gerne se jeres ansigter under ceremonien, så vi beder jer venligst lægge telefonen væk. Vores fotograf fanger hvert øjeblik, og vi deler billederne med jer bagefter.",
     rsvpConfirmTitle:"Tak!",
     rsvpConfirmAccept:"Dit svar er modtaget — vi har noteret {n} ud af {max}. Vi glæder os til at fejre med jer.",
     rsvpConfirmDecline:"Dit svar er modtaget. Vi vil savne jer, men tak fordi I gav besked.",
@@ -1056,6 +1059,7 @@ const STR = {
     rsvpFormSuccess:"مننه — ستاسو ځواب په مینه ترلاسه شو.",
     rsvpPersonalOnly:"ځواب ورکول ستاسو د شخصي بلنې لینک له لارې کیږي. مهرباني وکړئ هغه لینک وکاروئ چې موږ درلېږلی — یا لاندې زموږ سره اړیکه ونیسئ.",
     adultsNote:"که څه هم موږ ماشومان له زړه خوښوو او درناوی ورته لرو، موږ په درنښت داسې انګیرو چې هیڅ ماشوم به په ځای کې نه وي.",
+    phonesNote:"زموږ سره اوسئ، نه د سکرین شاته. موږ غواړو د مراسمو په جریان کې ستاسو مخونه وګورو، نو په درنښت غواړو چې ټیلیفونونه پټ وساتئ — زموږ عکاس به هره شېبه ثبت کړي، او موږ به یې وروسته درسره شریک کړو.",
     rsvpConfirmTitle:"مننه!",
     rsvpConfirmAccept:"ستاسو ځواب ترلاسه شو — موږ د {max} څخه {n} ثبت کړل. ستاسو د لیدو په تمه یو.",
     rsvpConfirmDecline:"ستاسو ځواب ترلاسه شو. ستاسو نشتوالی به راته درد وي، خو د خبر کولو مننه.",
@@ -1295,6 +1299,12 @@ if (rsvpForm) {
               '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2Zm0-4h-2V7h2Z"/>' +
             '</svg>' +
             '<span>' + (S.adultsNote || STR.en.adultsNote) + '</span>' +
+          '</span>' +
+          '<span class="confirm-phones">' +
+            '<svg class="adults-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+              '<path d="M9.4 4h5.2l1.2 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4.2l1.2-2Zm2.6 5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/>' +
+            '</svg>' +
+            '<span>' + (S.phonesNote || STR.en.phonesNote) + '</span>' +
           '</span>');
       statusEl.className = 'rsvp-status success';
       /* Bring the confirmation into view. Purely cosmetic — must never be able to
