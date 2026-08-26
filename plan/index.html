@@ -64,6 +64,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
   <button data-tab="plan" class="on">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
   <button data-tab="feedback">Feedback</button>
+  <button data-tab="guests" id="guestsTab" class="hidden">Guests</button>
   <button data-tab="bordplan" id="bordplanTab" class="hidden">Bordplan</button>
   <button id="logoutBtn">Sign out</button>
 </nav>
@@ -120,6 +121,21 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
       </div>
     </section>
 
+    <section id="guests">
+      <div id="guestSummary"></div>
+      <div class="card row" style="justify-content:space-between">
+        <span class="small">Change a status with the dropdown; counts update live.</span>
+        <button class="btn sm" id="newGuestBtn">+ Add guest</button>
+      </div>
+      <div id="guestEdit" class="card hidden">
+        <h2 style="margin-top:0">Add guest</h2>
+        <div class="row"><div style="flex:2"><label>Name</label><input id="gName"></div><div style="flex:1"><label>Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
+        <div class="row"><div style="flex:1"><label>Status</label><select id="gStatus"><option>Bekræftet</option><option>Ikke sikker</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label>Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
+        <label>Note</label><input id="gNote">
+        <div class="row" style="margin-top:10px"><button class="btn" id="gSave">Save</button><button class="btn ghost" id="gCancel">Cancel</button></div>
+      </div>
+      <div id="guestWrap"></div>
+    </section>
     <section id="bordplan"><div id="bordplanWrap"></div></section>
   </div>
 </main>
@@ -144,6 +160,7 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
   document.querySelectorAll("nav button[data-tab]").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
   if (b.dataset.tab === "bordplan") loadBordplan();
+  if (b.dataset.tab === "guests") loadGuests();
 });
 (function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
 
@@ -173,11 +190,12 @@ async function boot(){
   $("meName").textContent = me.name; $("meRole").textContent = me.role;
   $("bordplanTab").classList.toggle("hidden", !isAdmin());
   $("tasksTab").classList.toggle("hidden", !isAdmin());
+  $("guestsTab").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
   $("planEdit").classList.toggle("hidden", !isCouple());
   renderFeedbackButtons();
   await loadAll();
-  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, () => loadAll()).subscribe();
+  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else loadAll(); }).subscribe();
   setInterval(loadAll, 60000);
 }
 function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
@@ -262,6 +280,48 @@ ${$("fMsg").value.trim()}`;
   wa.onclick = e => { if (!$("fMsg").value.trim()) { e.preventDefault(); return; } wa.href = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text())}`; };
   w.appendChild(wa);
 }
+
+// ---- guests / RSVP overview ----
+const CAPS = {1:9,2:10,3:10,4:10,5:10,6:10,7:9,8:9,9:9};   // chairs per table (10 where babies sit)
+let guests = [];
+const STATUSES = ["Bekræftet","Ikke sikker","Afventer","Afbud"];
+async function loadGuests(){
+  const { data, error } = await sb.from("guests").select("*").order("table_no", { nullsFirst: false }).order("id");
+  if (error) { $("guestWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
+  guests = data; renderGuests();
+}
+function renderGuests(){
+  const live = guests.filter(g => g.status !== "Afbud");
+  const chairs = s => live.filter(g => g.seat && (!s || g.status === s)).length;
+  const babies = live.filter(g => !g.seat).length;
+  const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
+  const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px"><div style="font-size:30px;font-weight:600;color:var(--bronze)" class="${cls}">${n}</div><div class="small">${l}</div></div>`;
+  $("guestSummary").innerHTML = `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
+    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Ikke sikker"), "unsure") + box(chairs("Afventer"), "awaiting reply") +
+    box(guests.filter(g=>g.status==="Afbud").length, "declined") + box(babies, "babies (no chair)") + box(cap - chairs(), "seats free of " + cap, cap - chairs() < 0 ? "late" : "") + `</div>
+    <div class="small" style="margin:4px 8px">+ Saeed & Aya at their own table. Chairs needed = everyone not declined, excluding babies.</div>`;
+  const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
+  const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
+  $("guestWrap").innerHTML = keys.map(t => {
+    const arr = byT[t], used = arr.filter(g => g.seat && g.status !== "Afbud").length, cap = CAPS[t];
+    const head = t ? `Table ${t} — ${esc(arr[0].grp)} <span class="pill ${cap && used>cap?"late":""}">${used}${cap?" / "+cap:""}</span>` : `Not placed <span class="pill">${used}</span>`;
+    return `<h2>${head}</h2><div class="card"><table>` + arr.map(g => `<tr>
+      <td>${esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}${g.note?`<div class="meta">${esc(g.note)}</div>`:""}</td>
+      <td style="width:150px"><select onchange="setStatus(${g.id},this.value)" style="padding:5px 8px;font-size:15px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select></td>
+      <td style="width:60px;text-align:right"><a href="#" onclick="moveGuest(${g.id});return false" class="small">move</a></td></tr>`).join("") + `</table></div>`;
+  }).join("");
+}
+window.setStatus = async (id, status) => { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests(); };
+window.moveGuest = async id => { const g = guests.find(x => x.id === id); const t = prompt(`Move ${g.name} to table (blank = unplaced):`, g.table_no ?? ""); if (t === null) return; const { error } = await sb.from("guests").update({ table_no: t ? +t : null, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests(); };
+$("newGuestBtn").onclick = () => { $("guestEdit").classList.remove("hidden"); $("gName").focus(); };
+$("gCancel").onclick = () => $("guestEdit").classList.add("hidden");
+$("gSave").onclick = async () => {
+  const name = $("gName").value.trim(); if (!name) return;
+  const t = $("gTable").value ? +$("gTable").value : null;
+  const grp = t ? (guests.find(g => g.table_no === t)?.grp || "") : "Ikke placeret";
+  const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", note: $("gNote").value.trim() });
+  if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
+};
 
 // ---- bordplan (private bucket, signed URLs) ----
 async function loadBordplan(){
