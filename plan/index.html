@@ -63,9 +63,10 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
 <nav id="nav" class="hidden">
   <button data-tab="plan" class="on">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
-  <button data-tab="feedback">Feedback</button>
   <button data-tab="guests" id="guestsTab" class="hidden">Guests</button>
   <button data-tab="bordplan" id="bordplanTab" class="hidden">Bordplan</button>
+  <button data-tab="feedback">Feedback</button>
+  <button data-tab="contacts">Contacts</button>
   <button id="logoutBtn">Sign out</button>
 </nav>
 <main>
@@ -138,6 +139,19 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
       <div id="guestWrap"></div>
     </section>
     <section id="bordplan"><div id="bordplanWrap"></div></section>
+
+    <section id="contacts">
+      <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm" id="newContactBtn">+ New contact</button></div>
+      <div id="contactEdit" class="card hidden">
+        <h2 style="margin-top:0" id="contactEditTitle">New contact</h2>
+        <input type="hidden" id="cId">
+        <div class="row"><div style="flex:1"><label>Role</label><input id="cRole" placeholder="DJ, Baker, Chauffeur 1…"></div><div style="flex:1"><label>Name</label><input id="cName"></div></div>
+        <div class="row"><div style="flex:1"><label>Phone (with country code)</label><input id="cPhone" placeholder="+45 12 34 56 78"></div><div style="flex:1"><label>Email</label><input id="cEmail" type="email"></div></div>
+        <div class="row"><div style="flex:1"><label>Sort</label><input id="cSort" type="number" placeholder="10"></div><div style="flex:2"><label>Note</label><input id="cNote" placeholder="Arrives 16.00, needs 2 × 230 V…"></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="cSave">Save</button><button class="btn ghost" id="cCancel">Cancel</button><button class="btn ghost hidden" id="cDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+      </div>
+      <div id="contactWrap"></div>
+    </section>
   </div>
 </main>
 
@@ -162,6 +176,7 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
   if (b.dataset.tab === "bordplan") loadBordplan();
   if (b.dataset.tab === "guests") loadGuests();
+  if (b.dataset.tab === "contacts") loadContacts();
 });
 (function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
 
@@ -186,11 +201,12 @@ async function boot(){
   $("bordplanTab").classList.toggle("hidden", !isAdmin());
   $("tasksTab").classList.toggle("hidden", !isAdmin());
   $("guestsTab").classList.toggle("hidden", !isAdmin());
+  $("contactBar").classList.toggle("hidden", !isCouple());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
   $("planBar").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
   await loadAll();
-  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else loadAll(); }).subscribe();
+  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else loadAll(); }).subscribe();
   setInterval(loadAll, 60000);
 }
 function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
@@ -349,6 +365,40 @@ $("gSave").onclick = async () => {
   const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", note: $("gNote").value.trim() });
   if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
 };
+
+// ---- contacts ----
+let contacts = [];
+async function loadContacts(){
+  const { data, error } = await sb.from("contacts").select("*").order("sort").order("role");
+  if (error) { $("contactWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
+  contacts = data;
+  const digits = p => (p || "").replace(/[^0-9]/g, "");
+  $("contactWrap").innerHTML = `<h2>Contacts</h2><div class="card">` + (contacts.length ? contacts.map(c => `
+    <div class="task"><div class="b">
+      <div class="ti">${esc(c.role)}${c.name?` <span class="pill">${esc(c.name)}</span>`:""}</div>
+      ${c.note?`<div class="meta">${esc(c.note)}</div>`:""}
+      <div class="row" style="margin-top:6px">
+        ${c.phone?`<a class="btn ghost sm" href="tel:${digits(c.phone).startsWith("45")?"+":""}${digits(c.phone)}">${esc(c.phone)}</a><a class="btn wa sm" href="https://wa.me/${digits(c.phone)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
+        ${c.email?`<a class="btn ghost sm" href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}
+        ${isCouple()?`<a href="#" class="small" onclick="editContact(${c.id});return false">edit</a>`:""}
+      </div></div></div>`).join("") : `<div class="small">No contacts yet.</div>`) + `</div>`;
+}
+function openContactEdit(c){
+  $("contactEdit").classList.remove("hidden"); $("contactEditTitle").textContent = c ? "Edit contact" : "New contact";
+  $("cId").value = c?.id || ""; $("cRole").value = c?.role || ""; $("cName").value = c?.name || ""; $("cPhone").value = c?.phone || ""; $("cEmail").value = c?.email || ""; $("cSort").value = c?.sort ?? ""; $("cNote").value = c?.note || "";
+  $("cDelete").classList.toggle("hidden", !c); $("contactEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("cRole").focus();
+}
+window.editContact = id => openContactEdit(contacts.find(c => c.id === id));
+$("newContactBtn").onclick = () => openContactEdit(null);
+$("cCancel").onclick = () => $("contactEdit").classList.add("hidden");
+$("cSave").onclick = async () => {
+  const row = { role: $("cRole").value.trim(), name: $("cName").value.trim(), phone: $("cPhone").value.trim(), email: $("cEmail").value.trim(), sort: +$("cSort").value || 99, note: $("cNote").value.trim() };
+  if (!row.role) return;
+  const id = $("cId").value;
+  const { error } = await (id ? sb.from("contacts").update(row).eq("id", id) : sb.from("contacts").insert(row));
+  if (error) alert(error.message); else { $("contactEdit").classList.add("hidden"); loadContacts(); }
+};
+$("cDelete").onclick = async () => { if (confirm("Delete this contact?")) { await sb.from("contacts").delete().eq("id", $("cId").value); $("contactEdit").classList.add("hidden"); loadContacts(); } };
 
 // ---- bordplan (private bucket, signed URLs) ----
 async function loadBordplan(){
