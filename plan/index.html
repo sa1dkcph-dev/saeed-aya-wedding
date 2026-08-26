@@ -321,11 +321,10 @@ async function loadGuests(){
 function renderGuests(){
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = s => live.filter(g => g.seat && (!s || g.status === s)).length;
-  const babies = live.filter(g => !g.seat).length;
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
   const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px"><div style="font-size:30px;font-weight:600;color:var(--bronze)" class="${cls}">${n}</div><div class="small">${l}</div></div>`;
   $("guestSummary").innerHTML = `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
-    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(babies, "babies (no chair)") + `</div>`;
+    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(live.filter(g => g.highchair).length, "highchairs") + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
