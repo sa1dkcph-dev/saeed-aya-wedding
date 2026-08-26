@@ -129,13 +129,13 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
     <section id="guests">
       <div id="guestSummary"></div>
       <div class="card row" style="justify-content:space-between">
-        <span class="small">Change a status with the dropdown; counts update live.</span>
+        <span></span>
         <button class="btn sm" id="newGuestBtn">+ Add guest</button>
       </div>
       <div id="guestEdit" class="card hidden">
         <h2 style="margin-top:0">Add guest</h2>
         <div class="row"><div style="flex:2"><label>Name</label><input id="gName"></div><div style="flex:1"><label>Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
-        <div class="row"><div style="flex:1"><label>Status</label><select id="gStatus"><option>Bekræftet</option><option>Ikke sikker</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label>Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
+        <div class="row"><div style="flex:1"><label>Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label>Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
         <label>Note</label><input id="gNote">
         <div class="row" style="margin-top:10px"><button class="btn" id="gSave">Save</button><button class="btn ghost" id="gCancel">Cancel</button></div>
       </div>
@@ -312,7 +312,7 @@ ${$("fMsg").value.trim()}`;
 // ---- guests / RSVP overview ----
 const CAPS = {1:9,2:10,3:10,4:10,5:10,6:10,7:9,8:9,9:9};   // chairs per table (10 where babies sit)
 let guests = [];
-const STATUSES = ["Bekræftet","Ikke sikker","Afventer","Afbud"];
+const STATUSES = ["Bekræftet","Afventer","Afbud"];
 async function loadGuests(){
   const { data, error } = await sb.from("guests").select("*").order("table_no", { nullsFirst: false }).order("id");
   if (error) { $("guestWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
@@ -325,9 +325,7 @@ function renderGuests(){
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
   const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px"><div style="font-size:30px;font-weight:600;color:var(--bronze)" class="${cls}">${n}</div><div class="small">${l}</div></div>`;
   $("guestSummary").innerHTML = `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
-    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Ikke sikker"), "unsure") + box(chairs("Afventer"), "awaiting reply") +
-    box(guests.filter(g=>g.status==="Afbud").length, "declined") + box(babies, "babies (no chair)") + box(cap - chairs(), "seats free of " + cap, cap - chairs() < 0 ? "late" : "") + `</div>
-    <div class="small" style="margin:4px 8px">+ Saeed & Aya at their own table. Chairs needed = everyone not declined, excluding babies.</div>`;
+    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(babies, "babies (no chair)") + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
@@ -340,7 +338,7 @@ function renderGuests(){
     s += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="${cap&&used>cap?"#9b3b2e":"#6e615f"}">${used}${cap?" / "+cap:""}</text>`;
     seated.forEach((g, i) => {
       const a = -Math.PI/2 + i * 2*Math.PI/n, x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
-      const col = g.status === "Bekræftet" ? "#5e6a50" : g.status === "Ikke sikker" ? "#b08d57" : "#9b3b2e";
+      const col = g.status === "Bekræftet" ? "#5e6a50" : "#9b3b2e";
       const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
       const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
@@ -351,7 +349,7 @@ function renderGuests(){
   };
   const order = keys.filter(t => t);
   $("guestWrap").innerHTML = `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + order.map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px"><div class="small" style="text-align:center">${esc(byT[t][0].grp)}</div>${tableSvg(t, byT[t])}</div>`).join("") + `</div>
-    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ unsure (gold) / awaiting (red) &nbsp; small ○ baby on lap. Declined are not drawn.</div>` +
+    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.</div>` +
   keys.map(t => {
     const arr = byT[t], used = arr.filter(g => g.seat && g.status !== "Afbud").length, cap = CAPS[t];
     const head = t ? `Table ${t} — ${esc(arr[0].grp)} <span class="pill ${cap && used>cap?"late":""}">${used}${cap?" / "+cap:""}</span>` : `Not placed <span class="pill">${used}</span>`;
