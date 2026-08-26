@@ -37,6 +37,9 @@ td.w{color:var(--ink-soft);font-style:italic;width:150px}
 .pill{display:inline-block;font-size:14px;background:var(--blush);color:var(--bronze);border-radius:12px;padding:1px 9px;margin-left:6px}
 .pill.me{background:var(--sage);color:#fff}
 .late{color:var(--danger);font-weight:600}
+tr.pdone td{color:var(--ink-soft);text-decoration:line-through;opacity:.7}
+tr.pdone td:first-child{text-decoration:none;opacity:1}
+tr.pdone a{text-decoration:underline;display:inline-block}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 input,textarea,select{font:inherit;font-size:17px;padding:9px 10px;border:1px solid var(--brass);border-radius:8px;background:#fff;color:var(--ink);width:100%}
 textarea{min-height:90px;resize:vertical}
@@ -87,7 +90,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
 
     <section id="plan" class="on">
       <div id="planWrap"></div>
-      <div class="card row hidden" id="planBar" style="justify-content:flex-end"><button class="btn sm" id="newPlanBtn">+ New plan item</button></div>
+      <div class="card row" id="planBar" style="justify-content:space-between"><span class="small" id="planProgress"></span><button class="btn sm hidden" id="newPlanBtn">+ New plan item</button></div>
       <div id="planEdit" class="card hidden">
         <h2 style="margin-top:0" id="planEditTitle">New plan item</h2>
         <input type="hidden" id="pId">
@@ -203,7 +206,7 @@ async function boot(){
   $("guestsTab").classList.toggle("hidden", !isAdmin());
   $("contactBar").classList.toggle("hidden", !isCouple());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
-  $("planBar").classList.toggle("hidden", !isAdmin());
+  $("newPlanBtn").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
   await loadAll();
   sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else loadAll(); }).subscribe();
@@ -228,11 +231,14 @@ async function loadAll(){
 function renderPlan(){
   let h = "";
   for (const s of ["Setup and morning", "Reception"]) {
-    const rows = plan.filter(r => r.section === s);
+    const rows = plan.filter(r => r.section === s); if (!rows.length) continue;
     h += `<h2>${esc(s)}</h2><div class="card"><table>` + rows.map(r =>
-      `<tr><td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">edit</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
+      `<tr class="${r.done?"pdone":""}">
+        <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
+        <td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">edit</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
+  const d = plan.filter(r => r.done).length; $("planProgress").textContent = plan.length ? `${d} of ${plan.length} done` + (isAdmin() ? " — tick items as they happen" : "") : "";
 }
 function openPlanEdit(r){
   $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = r ? "Edit plan item" : "New plan item";
@@ -240,6 +246,7 @@ function openPlanEdit(r){
   $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
 }
 window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
+window.planDone = async (id, done) => { const { error } = await sb.from("plan").update({ done, done_at: done ? new Date().toISOString() : null }).eq("id", id); if (error) alert("Not allowed: " + error.message); loadAll(); };
 $("newPlanBtn").onclick = () => openPlanEdit(null);
 $("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
