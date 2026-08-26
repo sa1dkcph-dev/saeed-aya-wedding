@@ -72,10 +72,9 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
   <!-- login gate -->
   <div id="gate" class="card">
     <h2 style="margin-top:0">Sign in</h2>
-    <div class="small">This page is private. Use the email and password Saeed gave you.</div>
-    <label>Email</label><input id="email" type="email" autocomplete="username">
-    <label>Password</label><input id="password" type="password" autocomplete="current-password">
-    <div class="row" style="margin-top:12px"><button class="btn" id="loginBtn">Sign in</button><button class="btn ghost sm" id="magicBtn" title="Sends a sign-in link to your email instead">Email me a link</button></div>
+    <div class="small">This page is private. Enter the email Saeed registered for you and we'll send you a sign-in link. You stay signed in on this device afterwards.</div>
+    <label>Email</label><input id="email" type="email" autocomplete="email" inputmode="email">
+    <div class="row" style="margin-top:12px"><button class="btn" id="magicBtn">Email me a link</button></div>
     <div id="loginMsg"></div>
   </div>
 
@@ -87,12 +86,14 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
 
     <section id="plan" class="on">
       <div id="planWrap"></div>
+      <div class="card row hidden" id="planBar" style="justify-content:flex-end"><button class="btn sm" id="newPlanBtn">+ New plan item</button></div>
       <div id="planEdit" class="card hidden">
-        <h2 style="margin-top:0">Add plan item</h2>
+        <h2 style="margin-top:0" id="planEditTitle">New plan item</h2>
+        <input type="hidden" id="pId">
         <label>Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
         <div class="row"><div style="flex:1"><label>Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label>Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
         <label>What</label><input id="pWhat"><label>Who</label><input id="pWho">
-        <div style="margin-top:10px"><button class="btn" id="pSave">Save</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn" id="pSave">Save</button><button class="btn ghost" id="pCancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
     </section>
 
@@ -148,7 +149,7 @@ const WEDDING = new Date("2026-09-18T17:30:00+02:00");
 const CONTACT = { name: "Saeed", whatsapp: "4560615552" };  // feedback recipient (WhatsApp)
 // ==================
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 const $ = id => document.getElementById(id);
 let me = null, members = [], tasks = [], plan = [];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -165,20 +166,14 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
 (function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
 
 // ---- auth ----
-$("loginBtn").onclick = async () => {
-  const email = $("email").value.trim().toLowerCase(), password = $("password").value;
-  if (!email || !password) return;
-  $("loginBtn").disabled = true;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  $("loginBtn").disabled = false;
-  if (error) $("loginMsg").innerHTML = `<div class="msg">${esc(error.message)}</div>`;
-};
 $("magicBtn").onclick = async () => {
   const email = $("email").value.trim().toLowerCase(); if (!email) { $("loginMsg").innerHTML = `<div class="msg">Enter your email first.</div>`; return; }
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.href.split("#")[0] } });
-  $("loginMsg").innerHTML = error ? `<div class="msg">${esc(error.message)}</div>` : `<div class="msg ok">Link sent to ${esc(email)}. Open it on this device.</div>`;
+  $("magicBtn").disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
+  $("magicBtn").disabled = false;
+  $("loginMsg").innerHTML = error ? `<div class="msg">${esc(error.message)}</div>` : `<div class="msg ok">Link sent to ${esc(email)}. Open it on this device — check spam if it doesn't arrive within a minute.</div>`;
 };
-$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("email").addEventListener("keydown", e => { if (e.key === "Enter") $("magicBtn").click(); });
 $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 async function boot(){
@@ -192,7 +187,7 @@ async function boot(){
   $("tasksTab").classList.toggle("hidden", !isAdmin());
   $("guestsTab").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
-  $("planEdit").classList.toggle("hidden", !isCouple());
+  $("planBar").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
   await loadAll();
   sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else loadAll(); }).subscribe();
@@ -219,7 +214,7 @@ function renderPlan(){
   for (const s of ["Setup and morning", "Reception"]) {
     const rows = plan.filter(r => r.section === s);
     h += `<h2>${esc(s)}</h2><div class="card"><table>` + rows.map(r =>
-      `<tr><td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isCouple()?` <button class="btn ghost sm" onclick="delPlan(${r.id})">✕</button>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
+      `<tr><td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">edit</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
 }
@@ -302,7 +297,29 @@ function renderGuests(){
     <div class="small" style="margin:4px 8px">+ Saeed & Aya at their own table. Chairs needed = everyone not declined, excluding babies.</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
-  $("guestWrap").innerHTML = keys.map(t => {
+  // visual: one round table per card, names around the rim
+  const tableSvg = (t, arr) => {
+    const seated = arr.filter(g => g.status !== "Afbud"), n = Math.max(seated.length, 1), R = 100, r = 55, cx = 150, cy = 150;
+    const cap = CAPS[t] || 0, used = seated.filter(g => g.seat).length;
+    let s = `<svg viewBox="-45 0 390 300" width="100%" style="max-width:380px;display:block;margin:0 auto" font-family="Cormorant Garamond,serif">`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f6e7d8" stroke="#b08d57" stroke-width="1.5"/>`;
+    s += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="26" font-weight="600" fill="#725729">${t}</text>`;
+    s += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="${cap&&used>cap?"#9b3b2e":"#6e615f"}">${used}${cap?" / "+cap:""}</text>`;
+    seated.forEach((g, i) => {
+      const a = -Math.PI/2 + i * 2*Math.PI/n, x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
+      const col = g.status === "Bekræftet" ? "#5e6a50" : g.status === "Ikke sikker" ? "#b08d57" : "#9b3b2e";
+      const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
+      const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
+      const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
+      s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text>`;
+    });
+    return s + `</svg>`;
+  };
+  const order = keys.filter(t => t);
+  $("guestWrap").innerHTML = `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + order.map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px"><div class="small" style="text-align:center">${esc(byT[t][0].grp)}</div>${tableSvg(t, byT[t])}</div>`).join("") + `</div>
+    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ unsure (gold) / awaiting (red) &nbsp; small ○ baby on lap. Declined are not drawn.</div>` +
+  keys.map(t => {
     const arr = byT[t], used = arr.filter(g => g.seat && g.status !== "Afbud").length, cap = CAPS[t];
     const head = t ? `Table ${t} — ${esc(arr[0].grp)} <span class="pill ${cap && used>cap?"late":""}">${used}${cap?" / "+cap:""}</span>` : `Not placed <span class="pill">${used}</span>`;
     return `<h2>${head}</h2><div class="card"><table>` + arr.map(g => `<tr>
