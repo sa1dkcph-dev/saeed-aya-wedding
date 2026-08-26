@@ -62,7 +62,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
 </header>
 <nav id="nav" class="hidden">
   <button data-tab="plan" class="on">Day plan</button>
-  <button data-tab="tasks">Tasks</button>
+  <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
   <button data-tab="feedback">Feedback</button>
   <button data-tab="bordplan" id="bordplanTab" class="hidden">Bordplan</button>
   <button id="logoutBtn">Sign out</button>
@@ -126,8 +126,8 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
 
 <script>
 // ===== CONFIG =====
-const SUPABASE_URL = "https://yqzspsalohjbbddwakiv.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_6cdiJL941Yh0uYe0Ynbt5Q_F-HUT2cx";
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_YOUR-KEY";
 const WEDDING = new Date("2026-09-18T17:30:00+02:00");
 const CONTACT = { name: "Saeed", whatsapp: "4560615552" };  // feedback recipient (WhatsApp)
 // ==================
@@ -172,6 +172,7 @@ async function boot(){
   $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
   $("meName").textContent = me.name; $("meRole").textContent = me.role;
   $("bordplanTab").classList.toggle("hidden", !isAdmin());
+  $("tasksTab").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
   $("planEdit").classList.toggle("hidden", !isCouple());
   renderFeedbackButtons();
@@ -186,13 +187,13 @@ sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) boot(); });
 async function loadAll(){
   const [m, t, pl] = await Promise.all([
     sb.from("members").select("name,role,sort").order("sort").order("name"),
-    sb.from("tasks").select("*").order("due", { nullsFirst: false }).order("id"),
+    isAdmin() ? sb.from("tasks").select("*").order("due", { nullsFirst: false }).order("id") : Promise.resolve({ data: [] }),
     sb.from("plan").select("*").order("section", { ascending: false }).order("sort")
   ]);
   if (m.error || t.error || pl.error) { $("status").textContent = "Could not load: " + (m.error||t.error||pl.error).message; return; }
   members = m.data; tasks = t.data; plan = pl.data;
   $("tAssignee").innerHTML = `<option value="">—</option>` + members.map(p => `<option>${esc(p.name)}</option>`).join("");
-  renderPlan(); renderTasks();
+  renderPlan(); if (isAdmin()) renderTasks();
   $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
 }
 function renderPlan(){
