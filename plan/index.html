@@ -218,12 +218,22 @@ function renderPlan(){
   }
   $("planWrap").innerHTML = h;
 }
-window.delPlan = async id => { if (confirm("Remove this plan item?")) { await sb.from("plan").delete().eq("id", id); loadAll(); } };
+function openPlanEdit(r){
+  $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = r ? "Edit plan item" : "New plan item";
+  $("pId").value = r?.id || ""; $("pSection").value = r?.section || "Reception"; $("pTime").value = r?.time || ""; $("pSort").value = r?.sort ?? ""; $("pWhat").value = r?.what || ""; $("pWho").value = r?.who || "";
+  $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
+}
+window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
+$("newPlanBtn").onclick = () => openPlanEdit(null);
+$("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
-  const row = { section: $("pSection").value, time: $("pTime").value, sort: +$("pSort").value || 99, what: $("pWhat").value, who: $("pWho").value };
+  const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), who: $("pWho").value.trim() };
   if (!row.what || !row.time) return;
-  const { error } = await sb.from("plan").insert(row); if (error) alert(error.message); else { $("pWhat").value = $("pWho").value = $("pTime").value = ""; loadAll(); }
+  const id = $("pId").value;
+  const { error } = await (id ? sb.from("plan").update(row).eq("id", id) : sb.from("plan").insert(row));
+  if (error) alert(error.message); else { $("planEdit").classList.add("hidden"); loadAll(); }
 };
+$("pDelete").onclick = async () => { if (confirm("Remove this plan item?")) { await sb.from("plan").delete().eq("id", $("pId").value); $("planEdit").classList.add("hidden"); loadAll(); } };
 function fmtDue(d){ return d ? new Date(d + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""; }
 function renderTasks(){
   const admin = isAdmin(), mine = me.name, hide = $("hideDone").checked, today = new Date().toISOString().slice(0,10);
