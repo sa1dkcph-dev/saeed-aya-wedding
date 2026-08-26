@@ -9,9 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--blush:#f8e0d8;--champagne:#f9e9cf;--ivory:#fdf7ee;--gold:#d4af37;--sage:#7d8a6d;--sage-active:#5e6a50;--ink:#5a5152;--ink-soft:#6e615f;--brass:#b08d57;--bronze:#725729;--white:#fffdfb;--danger:#9b3b2e}
+:root{--blush:#f8e0d8;--champagne:#f9e9cf;--ivory:#fdf7ee;--gold:#d4af37;--sage:#7d8a6d;--sage-active:#5e6a50;--ink:#5a5152;--ink-soft:#6e615f;--brass:#b08d57;--bronze:#725729;--white:#fffdfb;--danger:#9b3b2e;--wa:#0F7A38}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;color:var(--ink);background:linear-gradient(180deg,var(--champagne),var(--ivory) 40%)}
+body{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;color:var(--ink);background:linear-gradient(180deg,var(--champagne),var(--ivory) 40%);min-height:100vh}
 header{padding:28px 16px 12px;text-align:center}
 h1{margin:0;font-weight:500;font-size:34px;color:var(--bronze);letter-spacing:.02em}
 .sub{color:var(--ink-soft);font-style:italic;margin-top:4px}
@@ -41,18 +41,16 @@ td.w{color:var(--ink-soft);font-style:italic;width:150px}
 input,textarea,select{font:inherit;font-size:17px;padding:9px 10px;border:1px solid var(--brass);border-radius:8px;background:#fff;color:var(--ink);width:100%}
 textarea{min-height:90px;resize:vertical}
 label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
-.btn{font:inherit;font-size:17px;padding:10px 18px;border-radius:22px;border:1px solid var(--bronze);background:var(--bronze);color:#fff;cursor:pointer;min-height:44px}
+.btn{font:inherit;font-size:17px;padding:10px 18px;border-radius:22px;border:1px solid var(--bronze);background:var(--bronze);color:#fff;cursor:pointer;min-height:44px;text-decoration:none;display:inline-block}
 .btn.ghost{background:none;color:var(--bronze)}
+.btn.wa{background:var(--wa);border-color:var(--wa)}
 .btn.sm{padding:5px 12px;min-height:34px;font-size:15px}
 .btn:disabled{opacity:.5;cursor:default}
 .small{font-size:15px;color:var(--ink-soft)}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .msg{padding:10px 12px;border-radius:8px;background:#f3ddc4;color:#5c3d24;margin:8px 0}
 .ok{background:#e4ecdc;color:#3f4c33}
 .hidden{display:none!important}
-details summary{cursor:pointer;color:var(--bronze)}
-.fb{border-left:3px solid var(--gold);padding:8px 12px;margin:8px 0;background:var(--ivory)}
-.fb.h{opacity:.55}
+#gate{max-width:440px;margin:30px auto}
 @media(max-width:600px){td.w{display:none}h1{font-size:28px}}
 </style>
 </head>
@@ -62,136 +60,147 @@ details summary{cursor:pointer;color:var(--bronze)}
   <div class="sub">Friday 18 September 2026 · Bellahøjgaard · doors 17.30</div>
   <div class="count" id="countdown"></div>
 </header>
-<nav>
+<nav id="nav" class="hidden">
   <button data-tab="plan" class="on">Day plan</button>
   <button data-tab="tasks">Tasks</button>
   <button data-tab="feedback">Feedback</button>
-  <button data-tab="inbox" id="inboxTab" class="hidden">Inbox</button>
-  <button id="loginBtn">Sign in</button>
+  <button data-tab="bordplan" id="bordplanTab" class="hidden">Bordplan</button>
+  <button id="logoutBtn">Sign out</button>
 </nav>
 <main>
-  <div class="card topbar">
-    <div class="row"><span class="small">I am</span><select id="who" style="width:auto;min-width:160px"></select></div>
-    <div class="small" id="status">Loading…</div>
-  </div>
-  <div id="loginBox" class="card hidden">
-    <div class="small">Sign-in is only for Saeed, Aya and the coordinator. Enter your email and open the link we send you.</div>
-    <div class="row" style="margin-top:8px"><input id="email" type="email" placeholder="email" style="flex:1;min-width:200px"><button class="btn" id="sendLink">Send link</button><button class="btn ghost" id="cancelLogin">Cancel</button></div>
+  <!-- login gate -->
+  <div id="gate" class="card">
+    <h2 style="margin-top:0">Sign in</h2>
+    <div class="small">This page is private. Use the email and password Saeed gave you.</div>
+    <label>Email</label><input id="email" type="email" autocomplete="username">
+    <label>Password</label><input id="password" type="password" autocomplete="current-password">
+    <div class="row" style="margin-top:12px"><button class="btn" id="loginBtn">Sign in</button><button class="btn ghost sm" id="magicBtn" title="Sends a sign-in link to your email instead">Email me a link</button></div>
     <div id="loginMsg"></div>
   </div>
 
-  <section id="plan" class="on">
-    <div id="planWrap"></div>
-    <div id="planEdit" class="card hidden">
-      <h2 style="margin-top:0">Add plan item</h2>
-      <label>Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
-      <div class="row"><div style="flex:1"><label>Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label>Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
-      <label>What</label><input id="pWhat"><label>Who</label><input id="pWho">
-      <div style="margin-top:10px"><button class="btn" id="pSave">Save</button></div>
-    </div>
-  </section>
-
-  <section id="tasks">
+  <div id="app" class="hidden">
     <div class="card row" style="justify-content:space-between">
-      <label style="margin:0"><input type="checkbox" id="hideDone" style="width:auto"> hide done</label>
-      <button class="btn sm hidden" id="newTaskBtn">+ New task</button>
+      <div><span class="small">Signed in as</span> <b id="meName"></b> <span class="pill" id="meRole"></span></div>
+      <div class="small" id="status"></div>
     </div>
-    <div id="taskEdit" class="card hidden">
-      <h2 style="margin-top:0" id="taskEditTitle">New task</h2>
-      <input type="hidden" id="tId">
-      <label>Task</label><input id="tTitle">
-      <div class="row"><div style="flex:1"><label>Due</label><input id="tDue" type="date"></div><div style="flex:1"><label>Assigned to</label><select id="tAssignee"></select></div></div>
-      <label>Notes</label><textarea id="tNotes"></textarea>
-      <div class="row" style="margin-top:10px"><button class="btn" id="tSave">Save</button><button class="btn ghost" id="tCancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
-    </div>
-    <div id="taskWrap"></div>
-  </section>
 
-  <section id="feedback">
-    <div class="card">
-      <h2 style="margin-top:0">Feedback &amp; suggestions</h2>
-      <div class="small">Goes only to Saeed and the coordinator.</div>
-      <label>Your name</label><input id="fName">
-      <label>Message</label><textarea id="fMsg" placeholder="A suggestion, a question, something you've noticed…"></textarea>
-      <div style="margin-top:10px"><button class="btn" id="fSend">Send</button></div>
-      <div id="fResult"></div>
-    </div>
-  </section>
+    <section id="plan" class="on">
+      <div id="planWrap"></div>
+      <div id="planEdit" class="card hidden">
+        <h2 style="margin-top:0">Add plan item</h2>
+        <label>Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
+        <div class="row"><div style="flex:1"><label>Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label>Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
+        <label>What</label><input id="pWhat"><label>Who</label><input id="pWho">
+        <div style="margin-top:10px"><button class="btn" id="pSave">Save</button></div>
+      </div>
+    </section>
 
-  <section id="inbox"><div id="inboxWrap"></div></section>
+    <section id="tasks">
+      <div class="card row" style="justify-content:space-between">
+        <label style="margin:0"><input type="checkbox" id="hideDone" style="width:auto"> hide done</label>
+        <button class="btn sm hidden" id="newTaskBtn">+ New task</button>
+      </div>
+      <div id="taskEdit" class="card hidden">
+        <h2 style="margin-top:0" id="taskEditTitle">New task</h2>
+        <input type="hidden" id="tId">
+        <label>Task</label><input id="tTitle">
+        <div class="row"><div style="flex:1"><label>Due</label><input id="tDue" type="date"></div><div style="flex:1"><label>Assigned to</label><select id="tAssignee"></select></div></div>
+        <label>Notes</label><textarea id="tNotes"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn" id="tSave">Save</button><button class="btn ghost" id="tCancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+      </div>
+      <div id="taskWrap"></div>
+    </section>
+
+    <section id="feedback">
+      <div class="card">
+        <h2 style="margin-top:0">Feedback &amp; suggestions</h2>
+        <div class="small">Write it here, then send it to Saeed on WhatsApp.</div>
+        <label>Message</label><textarea id="fMsg" placeholder="A suggestion, a question, something you've noticed…"></textarea>
+        <div class="row" style="margin-top:10px" id="fButtons"></div>
+      </div>
+    </section>
+
+    <section id="bordplan"><div id="bordplanWrap"></div></section>
+  </div>
 </main>
 
 <script>
-// ===== CONFIG — from Supabase "Connect" dialog: Project URL + publishable key (sb_publishable_…) =====
+// ===== CONFIG =====
 const SUPABASE_URL = "https://yqzspsalohjbbddwakiv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_6cdiJL941Yh0uYe0Ynbt5Q_F-HUT2cx";
 const WEDDING = new Date("2026-09-18T17:30:00+02:00");
-// ================================================================
+const CONTACT = { name: "Saeed", whatsapp: "4560615552" };  // feedback recipient (WhatsApp)
+// ==================
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
-let role = null, user = null, participants = [], tasks = [], plan = [], feedback = [];
+let me = null, members = [], tasks = [], plan = [];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const me = () => localStorage.getItem("who") || "";
+const isAdmin = () => me && (me.role === "couple" || me.role === "coordinator");
+const isCouple = () => me && me.role === "couple";
 
 // tabs
 document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button[data-tab]").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
-  if (b.dataset.tab === "inbox") loadFeedback();
+  if (b.dataset.tab === "bordplan") loadBordplan();
 });
+(function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
 
-// countdown
-(function tick(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
-
-// auth
-$("loginBtn").onclick = async () => { if (user) { await sb.auth.signOut(); location.reload(); } else $("loginBox").classList.toggle("hidden"); };
-$("cancelLogin").onclick = () => $("loginBox").classList.add("hidden");
-$("sendLink").onclick = async () => {
-  const email = $("email").value.trim().toLowerCase(); if (!email) return;
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.href.split("#")[0] } });
+// ---- auth ----
+$("loginBtn").onclick = async () => {
+  const email = $("email").value.trim().toLowerCase(), password = $("password").value;
+  if (!email || !password) return;
+  $("loginBtn").disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  $("loginBtn").disabled = false;
+  if (error) $("loginMsg").innerHTML = `<div class="msg">${esc(error.message)}</div>`;
+};
+$("magicBtn").onclick = async () => {
+  const email = $("email").value.trim().toLowerCase(); if (!email) { $("loginMsg").innerHTML = `<div class="msg">Enter your email first.</div>`; return; }
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.href.split("#")[0] } });
   $("loginMsg").innerHTML = error ? `<div class="msg">${esc(error.message)}</div>` : `<div class="msg ok">Link sent to ${esc(email)}. Open it on this device.</div>`;
 };
-async function initAuth(){
-  const { data } = await sb.auth.getSession(); user = data.session?.user || null;
-  if (user) { const r = await sb.rpc("my_role"); role = r.data || null; }
-  applyRole();
-}
-function applyRole(){
-  const admin = !!role, couple = role === "couple";
-  $("loginBtn").textContent = user ? `Sign out (${role || "no role"})` : "Sign in";
-  $("loginBox").classList.add("hidden");
-  $("inboxTab").classList.toggle("hidden", !admin);
-  $("newTaskBtn").classList.toggle("hidden", !admin);
-  $("planEdit").classList.toggle("hidden", !couple);
-  if (user && !role) $("status").textContent = "Signed in, but this email has no role. Ask Saeed.";
-}
+$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
-// data
+async function boot(){
+  const { data } = await sb.auth.getSession();
+  if (!data.session) { showGate(); return; }
+  const r = await sb.rpc("me"); me = r.data || null;
+  if (!me) { showGate(`Signed in as ${esc(data.session.user.email)}, but that email isn't on the list. Ask Saeed to add you.`); await sb.auth.signOut(); return; }
+  $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
+  $("meName").textContent = me.name; $("meRole").textContent = me.role;
+  $("bordplanTab").classList.toggle("hidden", !isAdmin());
+  $("newTaskBtn").classList.toggle("hidden", !isAdmin());
+  $("planEdit").classList.toggle("hidden", !isCouple());
+  renderFeedbackButtons();
+  await loadAll();
+  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, () => loadAll()).subscribe();
+  setInterval(loadAll, 60000);
+}
+function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
+sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) boot(); });
+
+// ---- data ----
 async function loadAll(){
-  const [p, t, pl] = await Promise.all([
-    sb.from("participants").select("*").order("sort").order("name"),
+  const [m, t, pl] = await Promise.all([
+    sb.from("members").select("name,role,sort").order("sort").order("name"),
     sb.from("tasks").select("*").order("due", { nullsFirst: false }).order("id"),
     sb.from("plan").select("*").order("section", { ascending: false }).order("sort")
   ]);
-  if (p.error || t.error || pl.error) { $("status").textContent = "Could not load — check the config keys."; return; }
-  participants = p.data; tasks = t.data; plan = pl.data;
-  renderWho(); renderPlan(); renderTasks();
+  if (m.error || t.error || pl.error) { $("status").textContent = "Could not load: " + (m.error||t.error||pl.error).message; return; }
+  members = m.data; tasks = t.data; plan = pl.data;
+  $("tAssignee").innerHTML = `<option value="">—</option>` + members.map(p => `<option>${esc(p.name)}</option>`).join("");
+  renderPlan(); renderTasks();
   $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
 }
-function renderWho(){
-  const sel = $("who"); const cur = me();
-  sel.innerHTML = `<option value="">— choose —</option>` + participants.map(p => `<option ${p.name===cur?"selected":""}>${esc(p.name)}</option>`).join("");
-  sel.onchange = () => { localStorage.setItem("who", sel.value); $("fName").value ||= sel.value; renderTasks(); };
-  $("fName").value ||= cur;
-  $("tAssignee").innerHTML = `<option value="">—</option>` + participants.map(p => `<option>${esc(p.name)}</option>`).join("");
-}
 function renderPlan(){
-  const secs = ["Setup and morning", "Reception"]; let h = "";
-  for (const s of secs) {
+  let h = "";
+  for (const s of ["Setup and morning", "Reception"]) {
     const rows = plan.filter(r => r.section === s);
     h += `<h2>${esc(s)}</h2><div class="card"><table>` + rows.map(r =>
-      `<tr><td class="t">${esc(r.time)}</td><td>${esc(r.what)}${role==="couple"?` <button class="btn ghost sm" onclick="delPlan(${r.id})">✕</button>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
+      `<tr><td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isCouple()?` <button class="btn ghost sm" onclick="delPlan(${r.id})">✕</button>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
 }
@@ -201,17 +210,15 @@ $("pSave").onclick = async () => {
   if (!row.what || !row.time) return;
   const { error } = await sb.from("plan").insert(row); if (error) alert(error.message); else { $("pWhat").value = $("pWho").value = $("pTime").value = ""; loadAll(); }
 };
-
-function fmtDue(d){ if (!d) return ""; return new Date(d + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+function fmtDue(d){ return d ? new Date(d + "T12:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""; }
 function renderTasks(){
-  const admin = !!role, mine = me(), hide = $("hideDone").checked, today = new Date().toISOString().slice(0,10);
+  const admin = isAdmin(), mine = me.name, hide = $("hideDone").checked, today = new Date().toISOString().slice(0,10);
   const list = tasks.filter(t => !(hide && t.done));
-  const groups = [["Mine", list.filter(t => t.assignee === mine)], ["Everyone", list.filter(t => t.assignee !== mine)]];
+  const groups = [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)], ["Everyone else", list.filter(t => t.assignee !== mine)]];
   let h = "";
-  for (const [name, arr] of groups) {
+  for (const [title, arr] of groups) {
     if (!arr.length) continue;
-    if (name === "Mine" && !mine) continue;
-    h += `<h2>${name === "Mine" ? esc(mine) + " — your tasks" : mine ? "Everyone else" : "All tasks"}</h2><div class="card">` + arr.map(t => {
+    h += `<h2>${title}</h2><div class="card">` + arr.map(t => {
       const late = !t.done && t.due && t.due < today;
       return `<div class="task ${t.done?"done":""}">
         <input type="checkbox" ${t.done?"checked":""} ${admin?"":"disabled"} onchange="toggle(${t.id},this.checked)" aria-label="done">
@@ -224,8 +231,8 @@ function renderTasks(){
 }
 $("hideDone").onchange = renderTasks;
 window.toggle = async (id, done) => {
-  const { error } = await sb.from("tasks").update({ done, done_at: done ? new Date().toISOString() : null, done_by: done ? (me() || user?.email) : null }).eq("id", id);
-  if (error) { alert("Not allowed: " + error.message); } loadAll();
+  const { error } = await sb.from("tasks").update({ done, done_at: done ? new Date().toISOString() : null, done_by: done ? me.name : null }).eq("id", id);
+  if (error) alert("Not allowed: " + error.message); loadAll();
 };
 function openTaskEdit(t){
   $("taskEdit").classList.remove("hidden"); $("taskEditTitle").textContent = t ? "Edit task" : "New task";
@@ -239,34 +246,37 @@ $("tSave").onclick = async () => {
   const row = { title: $("tTitle").value.trim(), due: $("tDue").value || null, assignee: $("tAssignee").value, notes: $("tNotes").value.trim() };
   if (!row.title) return;
   const id = $("tId").value;
-  const q = id ? sb.from("tasks").update(row).eq("id", id) : sb.from("tasks").insert({ ...row, created_by: me() || user?.email });
-  const { error } = await q; if (error) alert(error.message); else { $("taskEdit").classList.add("hidden"); loadAll(); }
+  const { error } = await (id ? sb.from("tasks").update(row).eq("id", id) : sb.from("tasks").insert({ ...row, created_by: me.name }));
+  if (error) alert(error.message); else { $("taskEdit").classList.add("hidden"); loadAll(); }
 };
 $("tDelete").onclick = async () => { if (confirm("Delete this task?")) { await sb.from("tasks").delete().eq("id", $("tId").value); $("taskEdit").classList.add("hidden"); loadAll(); } };
 
-// feedback
-$("fSend").onclick = async () => {
-  const name = $("fName").value.trim(), message = $("fMsg").value.trim(); if (!name || !message) return;
-  $("fSend").disabled = true;
-  const { error } = await sb.from("feedback").insert({ name, message });
-  $("fSend").disabled = false;
-  $("fResult").innerHTML = error ? `<div class="msg">${esc(error.message)}</div>` : `<div class="msg ok">Sent. Thank you!</div>`;
-  if (!error) $("fMsg").value = "";
-};
-async function loadFeedback(){
-  const { data, error } = await sb.from("feedback").select("*").order("created_at", { ascending: false });
-  if (error) { $("inboxWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
-  feedback = data;
-  $("inboxWrap").innerHTML = `<h2>Inbox</h2>` + (feedback.length ? feedback.map(f => `<div class="fb ${f.handled?"h":""}"><div class="row" style="justify-content:space-between"><b>${esc(f.name)}</b><span class="small">${new Date(f.created_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div><div>${esc(f.message)}</div><div style="margin-top:6px"><button class="btn ghost sm" onclick="handle(${f.id},${!f.handled})">${f.handled?"Mark open":"Mark handled"}</button></div></div>`).join("") : `<div class="card small">Nothing yet.</div>`);
+// ---- feedback via WhatsApp / email ----
+function renderFeedbackButtons(){
+  const w = $("fButtons"); w.innerHTML = "";
+  const text = () => `Wedding planner feedback from ${me.name}:
+
+${$("fMsg").value.trim()}`;
+  const wa = document.createElement("a"); wa.className = "btn wa"; wa.textContent = "WhatsApp Saeed"; wa.target = "_blank"; wa.rel = "noopener";
+  wa.onclick = e => { if (!$("fMsg").value.trim()) { e.preventDefault(); return; } wa.href = `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(text())}`; };
+  w.appendChild(wa);
 }
-window.handle = async (id, handled) => { await sb.from("feedback").update({ handled }).eq("id", id); loadFeedback(); };
 
-// realtime + polling fallback
-sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, () => loadAll()).subscribe();
-setInterval(loadAll, 60000);
+// ---- bordplan (private bucket, signed URLs) ----
+async function loadBordplan(){
+  const w = $("bordplanWrap"); w.innerHTML = `<h2>Bordplan</h2><div class="card small">Loading…</div>`;
+  const { data, error } = await sb.storage.from("bordplan").list("", { sortBy: { column: "name" } });
+  if (error) { w.innerHTML = `<h2>Bordplan</h2><div class="card small">${esc(error.message)}</div>`; return; }
+  const files = (data || []).filter(f => f.name && !f.name.startsWith("."));
+  if (!files.length) { w.innerHTML = `<h2>Bordplan</h2><div class="card small">No files uploaded yet (Supabase → Storage → bordplan).</div>`; return; }
+  const { data: signed } = await sb.storage.from("bordplan").createSignedUrls(files.map(f => f.name), 3600);
+  let h = `<h2>Bordplan</h2><div class="card">` + files.map((f, i) => `<div class="row" style="justify-content:space-between;padding:6px 0"><span>${esc(f.name)}</span><a class="btn ghost sm" href="${signed[i].signedUrl}" target="_blank" rel="noopener">Open / download</a></div>`).join("") + `</div>`;
+  const pdf = files.findIndex(f => /\.pdf$/i.test(f.name));
+  if (pdf >= 0) h += `<div class="card" style="padding:4px"><iframe src="${signed[pdf].signedUrl}#view=FitH" style="width:100%;height:70vh;border:none;border-radius:8px" title="Bordplan"></iframe></div>`;
+  w.innerHTML = h;
+}
 
-initAuth().then(loadAll);
-sb.auth.onAuthStateChange(() => initAuth().then(loadAll));
+boot();
 </script>
 </body>
 </html>
