@@ -177,8 +177,7 @@ a{color:var(--bronze-text)}
 <nav id="nav" class="hidden">
   <button data-tab="plan" class="on">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
-  <button data-tab="guests" id="guestsTab" class="hidden">Guests</button>
-  <button data-tab="bordplan" id="bordplanTab" class="hidden">Bordplan</button>
+  <button data-tab="guests" id="guestsTab" class="hidden">Bordplan</button>
   <button data-tab="feedback">Feedback</button>
   <button data-tab="contacts">Contacts</button>
   <button id="logoutBtn">Sign out</button>
@@ -243,6 +242,8 @@ a{color:var(--bronze-text)}
         <div class="row" style="gap:8px">
           <button class="btn sm" id="saveVersionBtn">Save as version</button>
           <button class="btn sm ghost" id="versionsBtn">Versions</button>
+          <button class="btn sm ghost" id="exportPdfBtn">PDF</button>
+          <button class="btn sm ghost" id="exportXlsBtn">Excel</button>
         </div>
         <button class="btn sm primary" id="newGuestBtn">+ Add guest</button>
       </div>
@@ -256,7 +257,6 @@ a{color:var(--bronze-text)}
       </div>
       <div id="guestWrap"></div>
     </section>
-    <section id="bordplan"><div id="bordplanWrap"></div></section>
 
     <section id="contacts">
       <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm primary" id="newContactBtn">+ New contact</button></div>
@@ -292,7 +292,6 @@ const isCouple = () => me && me.role === "couple";
 document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () => {
   document.querySelectorAll("nav button[data-tab]").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
-  if (b.dataset.tab === "bordplan") loadBordplan();
   if (b.dataset.tab === "guests") loadGuests();
   if (b.dataset.tab === "contacts") loadContacts();
 });
@@ -316,7 +315,6 @@ async function boot(){
   if (!me) { showGate(`Signed in as ${esc(data.session.user.email)}, but that email isn't on the list. Ask Saeed to add you.`); await sb.auth.signOut(); return; }
   $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
   $("meName").textContent = me.name; $("meRole").textContent = me.role;
-  $("bordplanTab").classList.toggle("hidden", !isAdmin());
   $("tasksTab").classList.toggle("hidden", !isAdmin());
   $("guestsTab").classList.toggle("hidden", !isAdmin());
   $("contactBar").classList.toggle("hidden", !isCouple());
@@ -328,7 +326,90 @@ async function boot(){
   setInterval(loadAll, 60000);
 }
 function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
-sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) boot(); });
+sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) // ---- exports ----
+function anon(name){
+  return String(name || "").trim().split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase() + ".").join(" ") || "–";
+}
+function tableRows(){
+  const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
+  return byT;
+}
+$("exportPdfBtn").onclick = () => {
+  const byT = tableRows();
+  const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
+  const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
+    const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+    const used = arr.filter(g => g.seat).length;
+    return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
+      `</ol></div>`;
+  }).join("");
+  const live = guests.filter(g => g.status !== "Afbud");
+  const chairs = live.filter(g => g.seat).length;
+  const w = window.open("", "_blank");
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bordplan – Saeed og Aya</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @page{size:A4 landscape;margin:14mm}
+    body{font-family:'Cormorant Garamond',Georgia,serif;color:#5a5152;margin:0}
+    h1{font-size:20pt;font-weight:500;color:#725729;margin:0 0 2mm}
+    .meta{font-size:9pt;color:#6e615f;margin-bottom:5mm}
+    svg{width:100%;height:auto;max-height:88mm}
+    .tables{display:flex;flex-wrap:wrap;gap:4mm;margin-top:6mm}
+    .tb{flex:0 1 calc(20% - 4mm);min-width:42mm;border:.4pt solid #b08d57;border-radius:1mm;padding:2mm 3mm;page-break-inside:avoid}
+    .tb h3{font-size:11pt;font-weight:600;color:#725729;margin:0 0 1mm;display:flex;justify-content:space-between}
+    .tb h3 span{font-weight:400;color:#6e615f;font-size:9pt}
+    ol{margin:0;padding-left:5mm;font-size:9.5pt;line-height:1.5}
+    .foot{margin-top:5mm;font-size:8pt;color:#6e615f;font-style:italic}
+  </style></head><body>
+    <h1>Bordplan – Saeed og Aya</h1>
+    <div class="meta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
+    ${svg}
+    <div class="tables">${tables}</div>
+    <div class="foot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
+  </body></html>`);
+  w.document.close();
+  w.onload = () => setTimeout(() => w.print(), 400);
+};
+$("exportXlsBtn").onclick = async () => {
+  const btn = $("exportXlsBtn"); btn.disabled = true;
+  try {
+    if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
+    const byT = tableRows();
+    const rows = [["Bord", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
+    for (const t of [...Object.keys(CAPS).map(Number), 0])
+      for (const g of (byT[t] || []))
+        rows.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+    const live = guests.filter(g => g.status !== "Afbud");
+    const sum = [["Bord", "Gruppe", "Kuverter", "Højstole", "Max", "Ledige"]];
+    for (const t of Object.keys(CAPS).map(Number)) {
+      const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+      const used = arr.filter(g => g.seat).length;
+      sum.push([t, arr[0]?.grp || "", used, arr.filter(g => g.highchair).length, CAPS[t], CAPS[t] - used]);
+    }
+    sum.push([]);
+    sum.push(["I alt", "", live.filter(g => g.seat).length, live.filter(g => g.highchair).length, Object.values(CAPS).reduce((a, b) => a + b, 0), ""]);
+    sum.push(["Brudepar (eget bord)", "", 2]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), "Oversigt");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Gæsteliste");
+    XLSX.writeFile(wb, `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.xlsx`);
+  } catch (e) {
+    // fallback: CSV with BOM, opens straight in Excel
+    const byT = tableRows();
+    const lines = [["Bord","Gruppe","Gæst","Status","Tæller som stol","Højstol","Note"]];
+    for (const t of [...Object.keys(CAPS).map(Number), 0])
+      for (const g of (byT[t] || []))
+        lines.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+    const csv = "\uFEFF" + lines.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+  btn.disabled = false;
+};
+
+boot(); });
 
 // ---- data ----
 async function loadAll(){
@@ -463,21 +544,60 @@ function renderGuests(){
     });
     return s + `</svg>`;
   };
-  const order = keys.filter(t => t);
-  $("guestWrap").innerHTML = `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + order.map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
-    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.</div>` +
-  keys.map(t => {
-    const arr = byT[t], used = arr.filter(g => g.seat && g.status !== "Afbud").length, cap = CAPS[t];
-    const head = t ? `Table ${t} — ${esc(arr[0].grp)} <span class="pill ${cap && used>cap?"late":""}">${used}${cap?" / "+cap:""}</span>` : `Not placed <span class="pill">${used}</span>`;
-    return `<h2>${head}</h2><div class="card"><table>` + arr.map(g => `<tr>
-      <td><a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}${g.note?`<div class="meta">${esc(g.note)}</div>`:""}</td>
-      <td style="width:150px"><select onchange="setStatus(${g.id},this.value)" style="padding:5px 8px;font-size:15px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select></td>
-      </tr>`).join("") + `</table></div>`;
-  }).join("");
+  // ---- hall floor plan, drawn from the table data (mirrors Bordplan – Riddersalen) ----
+  const L = 29.5, B = 7.2, S = 22, OX = 26, OY = 30;           // metres, scale, origin
+  const X = m => OX + m * S, Y = m => OY + (B - m) * S;         // Y flipped: north wall on top
+  const POS = { 1:[4.9,5.45], 2:[4.9,1.75], 3:[8.2,5.45], 4:[8.2,1.75], 5:[19.8,5.45], 6:[19.8,1.75], 7:[23.1,5.45], 8:[23.1,1.75], 9:[26.4,5.45] };
+  const fx = (x1,x2,y1,y2,label,fill="#fffdf9",fs=7) =>
+    `<rect x="${X(x1)}" y="${Y(y2)}" width="${(x2-x1)*S}" height="${(y2-y1)*S}" fill="${fill}" stroke="#b08d57" stroke-width=".8"/>` +
+    (label ? `<text x="${X((x1+x2)/2)}" y="${Y((y1+y2)/2)+3}" text-anchor="middle" font-size="${fs}" fill="#6e615f">${label}</text>` : "");
+  let hall = `<svg viewBox="0 -6 ${L*S + OX*2} ${B*S + OY*2 - 6}" style="width:100%;min-width:640px;height:auto;display:block" font-family="Cormorant Garamond,Georgia,serif">`;
+  hall += `<rect x="${X(0)}" y="${Y(B)}" width="${L*S}" height="${B*S}" fill="#fdf7ee" stroke="#725729" stroke-width="1.4"/>`;
+  hall += fx(-0.5,0,2.1,4.6,"") + `<text x="${X(-0.25)}" y="${Y(3.35)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(-0.25)} ${Y(3.35)})">Vindue</text>`;
+  hall += fx(L,L+0.5,2.3,4.9,"") + `<text x="${X(L+0.25)}" y="${Y(3.6)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(L+0.25)} ${Y(3.6)})">Indgang</text>`;
+  hall += fx(16.6,19.0,B,B+0.5,"Dør") + fx(5.6,8.1,-0.5,0,"Branddør") + fx(15.4,17.9,-0.5,0,"Branddør");
+  hall += `<path d="M ${X(10.0)} ${Y(B)} a ${0.9*S} ${0.9*S} 0 0 0 ${1.8*S} 0" fill="none" stroke="#b08d57" stroke-width=".8"/><text x="${X(10.9)}" y="${Y(B)-6}" text-anchor="middle" font-size="7" fill="#6e615f">Pejs</text>`;
+  hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(16.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Bagtæppe</text>`;
+  hall += fx(1.2,3.0,3.2,4.0,"","#f8e0d8") + `<text x="${X(2.1)}" y="${Y(3.6)+3}" text-anchor="middle" font-size="7.5" fill="#725729">Saeed &amp; Aya</text>`;
+  hall += `<rect x="${X(11.5)}" y="${Y(6.0)}" width="${6.5*S}" height="${5*S}" fill="none" stroke="#b08d57" stroke-width=".9" stroke-dasharray="5 4"/><text x="${X(14.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="9" font-style="italic" fill="#6e615f">Dansegulv</text>`;
+  hall += fx(10.2,11.4,0.15,0.95,"Kage") + fx(28.0,29.35,5.1,6.9,"DJ","#f9e9cf") + fx(28.5,29.35,0.7,2.1,"","#fdf7ee") + `<text x="${X(28.92)}" y="${Y(1.55)}" text-anchor="middle" font-size="6" fill="#6e615f">Velkomst</text><text x="${X(28.92)}" y="${Y(1.2)}" text-anchor="middle" font-size="6" fill="#6e615f">skilt</text>`;
+  for (const t of Object.keys(POS).map(Number)) {
+    const [gx, gy] = POS[t], arr = byT[t] || [], cap = CAPS[t];
+    const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
+    const over = used > cap, empty = used === 0;
+    hall += `<g style="cursor:pointer" onclick="showTable(${t})"><title>Table ${t} — ${used}/${cap}</title>`;
+    hall += `<circle cx="${X(gx)}" cy="${Y(gy)}" r="${1.35*S}" fill="#f4ece0" opacity=".55"/>`;
+    hall += `<circle cx="${X(gx)}" cy="${Y(gy)}" r="${0.9*S}" fill="${empty?"#fffdf9":"#f8e0d8"}" stroke="#725729" stroke-width="1.2"/>`;
+    hall += `<text x="${X(gx)}" y="${Y(gy)+1}" text-anchor="middle" font-size="15" font-weight="500" fill="#5a5152">${t}</text>`;
+    hall += `<text x="${X(gx)}" y="${Y(gy)+13}" text-anchor="middle" font-size="8" fill="${over?"#9b3b2e":"#6e615f"}">${used}/${cap}</text></g>`;
+  }
+  hall += `</svg>`;
+  const unplaced = byT[0] || [];
+  $("guestWrap").innerHTML = `<h2>Hall plan</h2>
+    <div class="card" style="padding:10px 6px;overflow-x:auto">${hall}</div>
+    <div class="small" style="margin:2px 8px 14px">Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.</div>` +
+    (unplaced.length ? `<h2>Not placed</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b"><a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a><span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
+    `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
+    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.</div>`;
 }
 async function setStatus(id, status) { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests();
 }
 window.setStatus = setStatus;
+window.showTable = t => {
+  const arr = guests.filter(g => g.table_no === t);
+  const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
+  const wrap = document.createElement("div"); wrap.id = "moveSheet";
+  wrap.innerHTML = `<div class="card">
+    <h2 style="margin-top:0">Table ${t}<span class="pill ${used>CAPS[t]?"late":""}">${used} / ${CAPS[t]}</span></h2>
+    ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
+    ${arr.length ? `<table>${arr.map(g => `<tr>
+      <td><a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}</td>
+      <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">Nobody seated here yet.</div>`}
+    <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">Close</button></div></div>`;
+  document.body.appendChild(wrap);
+  wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
+};
+window.closeSheets = () => document.querySelectorAll("#moveSheet").forEach(el => el.remove());
 window.moveGuest = id => {
   const g = guests.find(x => x.id === id); if (!g) return;
   const used = t => guests.filter(x => x.table_no === t && x.seat && x.status !== "Afbud").length;
@@ -622,19 +742,88 @@ $("cSave").onclick = async () => {
 };
 $("cDelete").onclick = async () => { if (confirm("Delete this contact?")) { await sb.from("contacts").delete().eq("id", $("cId").value); $("contactEdit").classList.add("hidden"); loadContacts(); } };
 
-// ---- bordplan (private bucket, signed URLs) ----
-async function loadBordplan(){
-  const w = $("bordplanWrap"); w.innerHTML = `<h2>Bordplan</h2><div class="card small">Loading…</div>`;
-  const { data, error } = await sb.storage.from("bordplan").list("", { sortBy: { column: "name" } });
-  if (error) { w.innerHTML = `<h2>Bordplan</h2><div class="card small">${esc(error.message)}</div>`; return; }
-  const files = (data || []).filter(f => f.name && !f.name.startsWith("."));
-  if (!files.length) { w.innerHTML = `<h2>Bordplan</h2><div class="card small">No files uploaded yet (Supabase → Storage → bordplan).</div>`; return; }
-  const { data: signed } = await sb.storage.from("bordplan").createSignedUrls(files.map(f => f.name), 3600);
-  let h = `<h2>Bordplan</h2><div class="card">` + files.map((f, i) => `<div class="row" style="justify-content:space-between;padding:6px 0"><span>${esc(f.name)}</span><a class="btn ghost sm" href="${signed[i].signedUrl}" target="_blank" rel="noopener">Open / download</a></div>`).join("") + `</div>`;
-  const pdf = files.findIndex(f => /\.pdf$/i.test(f.name));
-  if (pdf >= 0) h += `<div class="card" style="padding:4px"><iframe src="${signed[pdf].signedUrl}#view=FitH" style="width:100%;height:70vh;border:none;border-radius:8px" title="Bordplan"></iframe></div>`;
-  w.innerHTML = h;
+// ---- exports ----
+function anon(name){
+  return String(name || "").trim().split(/\s+/).filter(Boolean).map(w => w[0].toUpperCase() + ".").join(" ") || "–";
 }
+function tableRows(){
+  const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
+  return byT;
+}
+$("exportPdfBtn").onclick = () => {
+  const byT = tableRows();
+  const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
+  const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
+    const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+    const used = arr.filter(g => g.seat).length;
+    return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
+      `</ol></div>`;
+  }).join("");
+  const live = guests.filter(g => g.status !== "Afbud");
+  const chairs = live.filter(g => g.seat).length;
+  const w = window.open("", "_blank");
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bordplan – Saeed og Aya</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    @page{size:A4 landscape;margin:14mm}
+    body{font-family:'Cormorant Garamond',Georgia,serif;color:#5a5152;margin:0}
+    h1{font-size:20pt;font-weight:500;color:#725729;margin:0 0 2mm}
+    .meta{font-size:9pt;color:#6e615f;margin-bottom:5mm}
+    svg{width:100%;height:auto;max-height:88mm}
+    .tables{display:flex;flex-wrap:wrap;gap:4mm;margin-top:6mm}
+    .tb{flex:0 1 calc(20% - 4mm);min-width:42mm;border:.4pt solid #b08d57;border-radius:1mm;padding:2mm 3mm;page-break-inside:avoid}
+    .tb h3{font-size:11pt;font-weight:600;color:#725729;margin:0 0 1mm;display:flex;justify-content:space-between}
+    .tb h3 span{font-weight:400;color:#6e615f;font-size:9pt}
+    ol{margin:0;padding-left:5mm;font-size:9.5pt;line-height:1.5}
+    .foot{margin-top:5mm;font-size:8pt;color:#6e615f;font-style:italic}
+  </style></head><body>
+    <h1>Bordplan – Saeed og Aya</h1>
+    <div class="meta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
+    ${svg}
+    <div class="tables">${tables}</div>
+    <div class="foot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
+  </body></html>`);
+  w.document.close();
+  w.onload = () => setTimeout(() => w.print(), 400);
+};
+$("exportXlsBtn").onclick = async () => {
+  const btn = $("exportXlsBtn"); btn.disabled = true;
+  try {
+    if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
+    const byT = tableRows();
+    const rows = [["Bord", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
+    for (const t of [...Object.keys(CAPS).map(Number), 0])
+      for (const g of (byT[t] || []))
+        rows.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+    const live = guests.filter(g => g.status !== "Afbud");
+    const sum = [["Bord", "Gruppe", "Kuverter", "Højstole", "Max", "Ledige"]];
+    for (const t of Object.keys(CAPS).map(Number)) {
+      const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+      const used = arr.filter(g => g.seat).length;
+      sum.push([t, arr[0]?.grp || "", used, arr.filter(g => g.highchair).length, CAPS[t], CAPS[t] - used]);
+    }
+    sum.push([]);
+    sum.push(["I alt", "", live.filter(g => g.seat).length, live.filter(g => g.highchair).length, Object.values(CAPS).reduce((a, b) => a + b, 0), ""]);
+    sum.push(["Brudepar (eget bord)", "", 2]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), "Oversigt");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Gæsteliste");
+    XLSX.writeFile(wb, `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.xlsx`);
+  } catch (e) {
+    // fallback: CSV with BOM, opens straight in Excel
+    const byT = tableRows();
+    const lines = [["Bord","Gruppe","Gæst","Status","Tæller som stol","Højstol","Note"]];
+    for (const t of [...Object.keys(CAPS).map(Number), 0])
+      for (const g of (byT[t] || []))
+        lines.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+    const csv = "\uFEFF" + lines.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  }
+  btn.disabled = false;
+};
 
 boot();
 </script>
