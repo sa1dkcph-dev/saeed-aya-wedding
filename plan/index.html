@@ -93,6 +93,14 @@ tr.pdone a{text-decoration:underline;display:inline-block}
 }
 .pill.me{background:var(--sage);color:#fff}
 .late{color:var(--danger);font-weight:600}
+.seat-g:hover circle:last-of-type{stroke-width:2.5}
+.seat-g:hover text{font-weight:600}
+#moveSheet{position:fixed;inset:0;z-index:60;background:rgba(90,81,82,.45);display:flex;align-items:center;justify-content:center;padding:18px}
+#moveSheet .card{max-width:420px;width:100%;margin:0;max-height:86vh;overflow:auto}
+.tblbtn{font:inherit;font-size:1.1rem;font-weight:500;min-height:52px;border:1.5px solid rgba(138,106,53,.55);background:#fffdf9;color:var(--bronze-text);border-radius:3px;cursor:pointer}
+.tblbtn.cur{background:var(--bronze-text);color:#fff;border-color:var(--bronze-text)}
+.tblbtn.full{opacity:.45}
+.tblgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
 
 /* ---------- forms ---------- */
 .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
@@ -232,9 +240,13 @@ a{color:var(--bronze-text)}
     <section id="guests">
       <div id="guestSummary"></div>
       <div class="card row" style="justify-content:space-between">
-        <span></span>
+        <div class="row" style="gap:8px">
+          <button class="btn sm" id="saveVersionBtn">Save as version</button>
+          <button class="btn sm ghost" id="versionsBtn">Versions</button>
+        </div>
         <button class="btn sm primary" id="newGuestBtn">+ Add guest</button>
       </div>
+      <div id="versionsWrap"></div>
       <div id="guestEdit" class="card hidden">
         <h2 style="margin-top:0">Add guest</h2>
         <div class="row"><div style="flex:2"><label>Name</label><input id="gName"></div><div style="flex:1"><label>Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
@@ -442,27 +454,61 @@ function renderGuests(){
       const a = -Math.PI/2 + i * 2*Math.PI/n, x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
       const col = g.status === "Bekræftet" ? "#5e6a50" : "#9b3b2e";
       const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
-      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
       const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
       const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
-      s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text>`;
+      s += `<g class="seat-g" style="cursor:pointer" onclick="moveGuest(${g.id})"><title>${esc(g.name)} — tap to move</title>`;
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="transparent"/>`;
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
+      s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text></g>`;
     });
     return s + `</svg>`;
   };
   const order = keys.filter(t => t);
-  $("guestWrap").innerHTML = `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + order.map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px"><div class="small" style="text-align:center">${esc(byT[t][0].grp)}</div>${tableSvg(t, byT[t])}</div>`).join("") + `</div>
+  $("guestWrap").innerHTML = `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + order.map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
     <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.</div>` +
   keys.map(t => {
     const arr = byT[t], used = arr.filter(g => g.seat && g.status !== "Afbud").length, cap = CAPS[t];
     const head = t ? `Table ${t} — ${esc(arr[0].grp)} <span class="pill ${cap && used>cap?"late":""}">${used}${cap?" / "+cap:""}</span>` : `Not placed <span class="pill">${used}</span>`;
     return `<h2>${head}</h2><div class="card"><table>` + arr.map(g => `<tr>
-      <td>${esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}${g.note?`<div class="meta">${esc(g.note)}</div>`:""}</td>
+      <td><a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}${g.note?`<div class="meta">${esc(g.note)}</div>`:""}</td>
       <td style="width:150px"><select onchange="setStatus(${g.id},this.value)" style="padding:5px 8px;font-size:15px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td style="width:60px;text-align:right"><a href="#" onclick="moveGuest(${g.id});return false" class="small">move</a></td></tr>`).join("") + `</table></div>`;
+      </tr>`).join("") + `</table></div>`;
   }).join("");
 }
-window.setStatus = async (id, status) => { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests(); };
-window.moveGuest = async id => { const g = guests.find(x => x.id === id); const t = prompt(`Move ${g.name} to table (blank = unplaced):`, g.table_no ?? ""); if (t === null) return; const { error } = await sb.from("guests").update({ table_no: t ? +t : null, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests(); };
+async function setStatus(id, status) { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests();
+}
+window.setStatus = setStatus;
+window.moveGuest = id => {
+  const g = guests.find(x => x.id === id); if (!g) return;
+  const used = t => guests.filter(x => x.table_no === t && x.seat && x.status !== "Afbud").length;
+  const wrap = document.createElement("div"); wrap.id = "moveSheet";
+  wrap.innerHTML = `<div class="card">
+    <h2 style="margin-top:0">${esc(g.name)}</h2>
+    <div class="small" style="text-align:center">Currently ${g.table_no ? "at table " + g.table_no : "not placed"} · ${esc(g.status)}</div>
+    <label>Move to table</label>
+    <div class="tblgrid">${Object.keys(CAPS).map(t => {
+      const n = +t, u = used(n), full = u >= CAPS[n] && n !== g.table_no;
+      return `<button class="tblbtn ${n===g.table_no?"cur":""} ${full?"full":""}" data-t="${n}">${n}<div style="font-size:.62rem;letter-spacing:.06em">${u}/${CAPS[n]}</div></button>`;
+    }).join("")}</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost sm" data-t="">Not placed</button>
+      <select id="msStatus" style="flex:1;min-width:130px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="msClose">Close</button></div>
+  </div>`;
+  document.body.appendChild(wrap);
+  const close = () => wrap.remove();
+  wrap.onclick = e => { if (e.target === wrap) close(); };
+  wrap.querySelector("#msClose").onclick = close;
+  wrap.querySelector("#msStatus").onchange = async e => { await setStatus(id, e.target.value); close(); };
+  wrap.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => {
+    const v = b.dataset.t;
+    const grp = v ? (guests.find(x => x.table_no === +v && x.grp)?.grp || "") : "Ikke placeret";
+    const { error } = await sb.from("guests").update({ table_no: v ? +v : null, grp, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) alert(error.message);
+    close(); loadGuests();
+  });
+};
 $("newGuestBtn").onclick = () => { $("guestEdit").classList.remove("hidden"); $("gName").focus(); };
 $("gCancel").onclick = () => $("guestEdit").classList.add("hidden");
 $("gSave").onclick = async () => {
@@ -472,6 +518,75 @@ $("gSave").onclick = async () => {
   const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", note: $("gNote").value.trim() });
   if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
 };
+
+// ---- seating versions ----
+const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
+$("saveVersionBtn").onclick = async () => {
+  if (!guests.length) { alert("Nothing to save yet."); return; }
+  const { data: existing } = await sb.from("seating_versions").select("id");
+  const suggested = "Plan " + ((existing?.length || 0) + 1);
+  const name = prompt("Name this version:", suggested); if (!name) return;
+  const { error } = await sb.from("seating_versions").insert({ name: name.trim(), data: guests.map(snapFields), created_by: me.name });
+  if (error) alert(error.message); else { alert(`Saved as "${name.trim()}".`); loadVersions(); }
+};
+$("versionsBtn").onclick = () => { const w = $("versionsWrap"); if (w.innerHTML) { w.innerHTML = ""; } else loadVersions(); };
+async function loadVersions(){
+  const { data, error } = await sb.from("seating_versions").select("id,name,note,created_at,created_by,data").order("created_at", { ascending: false });
+  if (error) { $("versionsWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
+  if (!data.length) { $("versionsWrap").innerHTML = `<div class="card small">No saved versions yet. "Save as version" stores the current arrangement so you can come back to it.</div>`; return; }
+  const cur = guests.map(snapFields);
+  $("versionsWrap").innerHTML = `<h2>Saved versions</h2><div class="card">` + data.map(v => {
+    const seated = v.data.filter(g => g.table_no && g.status !== "Afbud").length;
+    const diff = countDiff(cur, v.data);
+    return `<div class="task"><div class="b">
+      <div class="ti">${esc(v.name)}<span class="pill">${seated} seated</span></div>
+      <div class="meta">${new Date(v.created_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${v.created_by?" · "+esc(v.created_by):""}${diff?` · ${diff} differ${diff===1?"s":""} from now`:" · identical to now"}</div>
+      <div class="row" style="margin-top:7px">
+        <button class="btn ghost sm" onclick="compareVersion(${v.id})">Compare</button>
+        <button class="btn ghost sm" onclick="restoreVersion(${v.id})">Restore</button>
+        <button class="btn ghost sm" style="color:var(--danger);border-color:var(--danger)" onclick="deleteVersion(${v.id})">Delete</button>
+      </div></div></div>`;
+  }).join("") + `</div>`;
+  window._versions = data;
+}
+function countDiff(a, b){
+  const m = new Map(b.map(g => [g.id, g]));
+  let n = 0;
+  for (const g of a) { const o = m.get(g.id); if (!o || o.table_no !== g.table_no || o.status !== g.status) n++; }
+  return n;
+}
+window.compareVersion = id => {
+  const v = window._versions.find(x => x.id === id); if (!v) return;
+  const m = new Map(v.data.map(g => [g.id, g]));
+  const rows = [];
+  for (const g of guests) {
+    const o = m.get(g.id);
+    if (!o) { rows.push([g.name, "—", g.table_no ? "table " + g.table_no : "not placed"]); continue; }
+    if (o.table_no !== g.table_no) rows.push([g.name, o.table_no ? "table " + o.table_no : "not placed", g.table_no ? "table " + g.table_no : "not placed"]);
+    else if (o.status !== g.status) rows.push([g.name, o.status, g.status]);
+  }
+  for (const o of v.data) if (!guests.find(g => g.id === o.id)) rows.push([o.name, o.table_no ? "table " + o.table_no : "not placed", "removed"]);
+  const wrap = document.createElement("div"); wrap.id = "moveSheet";
+  wrap.innerHTML = `<div class="card">
+    <h2 style="margin-top:0">${esc(v.name)} vs now</h2>
+    ${rows.length ? `<table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="small" style="text-align:right;white-space:nowrap">${esc(r[1])} → <b>${esc(r[2])}</b></td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">No differences.</div>`}
+    <div class="row" style="margin-top:14px"><button class="btn" id="cmpClose">Close</button></div></div>`;
+  document.body.appendChild(wrap);
+  const close = () => wrap.remove();
+  wrap.onclick = e => { if (e.target === wrap) close(); };
+  wrap.querySelector("#cmpClose").onclick = close;
+};
+window.restoreVersion = async id => {
+  const v = window._versions.find(x => x.id === id); if (!v) return;
+  if (!confirm(`Restore "${v.name}"? The current arrangement will be saved first as a backup.`)) return;
+  await sb.from("seating_versions").insert({ name: "Before restoring " + v.name, data: guests.map(snapFields), created_by: me.name });
+  for (const g of v.data) {
+    const { error } = await sb.from("guests").update({ table_no: g.table_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
+    if (error) { alert(error.message); break; }
+  }
+  await loadGuests(); loadVersions();
+};
+window.deleteVersion = async id => { if (!confirm("Delete this version?")) return; await sb.from("seating_versions").delete().eq("id", id); loadVersions(); };
 
 // ---- contacts ----
 let contacts = [];
