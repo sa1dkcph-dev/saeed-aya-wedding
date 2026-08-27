@@ -4,63 +4,166 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Saeed & Aya · Wedding planner</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23fdf7ee"/><circle cx="32" cy="32" r="24" fill="none" stroke="%23b08d57" stroke-width="2"/><text x="32" y="41" font-family="Georgia,serif" font-size="24" fill="%23b08d57" text-anchor="middle">SA</text></svg>'>
+<title>Saeed &amp; Aya · Wedding planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-:root{--blush:#f8e0d8;--champagne:#f9e9cf;--ivory:#fdf7ee;--gold:#d4af37;--sage:#7d8a6d;--sage-active:#5e6a50;--ink:#5a5152;--ink-soft:#6e615f;--brass:#b08d57;--bronze:#725729;--white:#fffdfb;--danger:#9b3b2e;--wa:#0F7A38}
-*{box-sizing:border-box}
-body{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;color:var(--ink);background:linear-gradient(180deg,var(--champagne),var(--ivory) 40%);min-height:100vh}
-header{padding:28px 16px 12px;text-align:center}
-h1{margin:0;font-weight:500;font-size:34px;color:var(--bronze);letter-spacing:.02em}
-.sub{color:var(--ink-soft);font-style:italic;margin-top:4px}
-.count{font-size:15px;color:var(--bronze);margin-top:6px}
-nav{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px 12px;position:sticky;top:0;background:rgba(253,247,238,.95);border-bottom:1px solid var(--brass);z-index:5}
-nav button{font:inherit;font-size:17px;background:none;border:1px solid var(--brass);color:var(--bronze);padding:8px 14px;border-radius:20px;min-height:44px;cursor:pointer}
-nav button.on{background:var(--bronze);color:#fff;border-color:var(--bronze)}
-main{max-width:880px;margin:0 auto;padding:14px 12px 60px}
+:root{
+  --blush:#f8e0d8; --blush-deep:#f2cec3; --champagne:#f9e9cf; --ivory:#fdf7ee;
+  --sky:#d8e2f0; --sky-rose:#f4dcd8; --gold:#d4af37; --gold-soft:#f2d270;
+  --sage:#7d8a6d; --sage-active:#5e6a50; --sage-soft:#aab597;
+  --ink:#5a5152; --ink-soft:#6e615f; --brass:#b08d57; --bronze-text:#725729;
+  --notice-bg:#f3ddc4; --notice-border:#b5734a; --notice-text:#5c3d24;
+  --whatsapp-green:#0F7A38; --white:#fffdfb; --danger:#9b3b2e;
+}
+html{font-size:107%;scroll-behavior:smooth}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;color:var(--ink);min-height:100vh;
+  background:
+    radial-gradient(90% 40% at 50% 0%, var(--sky) 0%, transparent 55%),
+    radial-gradient(70% 30% at 20% 18%, rgba(246,214,140,.35) 0%, transparent 70%),
+    linear-gradient(180deg, var(--sky-rose) 0%, var(--blush) 16%, var(--champagne) 34%, var(--ivory) 52%, var(--ivory) 100%);
+  background-attachment:fixed;
+}
+.script{font-family:'Pinyon Script',cursive;font-weight:400}
+
+/* ---------- header ---------- */
+header{padding:26px 20px 8px;text-align:center;position:relative}
+.hero-rings{width:62px;height:62px;margin:0 auto 2px}
+.hero-rings svg{width:100%;height:100%;filter:drop-shadow(0 2px 5px rgba(176,141,87,.35))}
+h1{font-family:'Pinyon Script',cursive;font-weight:400;font-size:clamp(2.2rem,7.5vw,3.2rem);color:var(--ink);line-height:1.05}
+.amp{color:var(--bronze-text);font-size:.62em;vertical-align:.16em;padding:0 .1em}
+.sub{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-top:10px}
+.count{font-size:.9rem;color:var(--bronze-text);font-style:italic;margin-top:6px}
+.hrule{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px auto 0;max-width:230px;color:var(--gold)}
+.hrule:before,.hrule:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+.hrule span{font-size:.7rem;transform:rotate(45deg);display:inline-block;width:7px;height:7px;border:1px solid var(--gold)}
+
+/* ---------- nav ---------- */
+nav{
+  display:flex;gap:5px;justify-content:center;flex-wrap:wrap;padding:10px 12px;
+  position:sticky;top:0;z-index:5;background:rgba(253,247,238,.94);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--brass);
+}
+nav button{
+  font:inherit;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;font-weight:500;
+  background:#fffdf9;border:1.5px solid rgba(138,106,53,.55);color:var(--bronze-text);
+  padding:8px 12px;border-radius:3px;min-height:40px;cursor:pointer;
+  transition:background .25s ease,color .25s ease,box-shadow .25s ease;
+}
+nav button:hover{background:var(--bronze-text);color:#fff}
+nav button.on{background:var(--bronze-text);color:#fff;border-color:var(--bronze-text);box-shadow:0 3px 8px rgba(114,87,41,.22)}
+
+main{max-width:720px;margin:0 auto;padding:18px 16px 70px}
 section{display:none}section.on{display:block}
-.card{background:var(--white);border:1px solid #eadfcf;border-radius:12px;padding:14px 16px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-h2{font-size:22px;font-weight:600;color:var(--bronze);margin:22px 0 8px;border-bottom:1px solid var(--gold);padding-bottom:4px}
+
+/* ---------- cards & headings ---------- */
+.card{
+  background:var(--white);border:1px solid rgba(176,141,87,.35);border-radius:4px;
+  padding:16px 18px;margin:12px 0;box-shadow:0 3px 10px rgba(120,90,50,.06);
+}
+h2{
+  font-size:1.02rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--bronze-text);margin:26px 0 10px;text-align:center;position:relative;
+}
+h2:after{content:"";display:block;width:64px;height:1px;background:var(--gold);margin:9px auto 0}
 table{width:100%;border-collapse:collapse}
-td{padding:8px 6px;vertical-align:top;border-bottom:1px solid #f0e6d8}
-td.t{white-space:nowrap;font-weight:600;color:var(--bronze);width:90px}
-td.w{color:var(--ink-soft);font-style:italic;width:150px}
-.task{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0e6d8}
-.task:last-child{border-bottom:none}
-.task input[type=checkbox]{width:26px;height:26px;margin-top:2px;accent-color:var(--sage-active);flex:none}
-.task .b{flex:1}
-.task .ti{font-weight:600;font-size:19px}
-.task.done .ti{text-decoration:line-through;color:var(--ink-soft);font-weight:400}
-.meta{font-size:15px;color:var(--ink-soft)}
-.pill{display:inline-block;font-size:14px;background:var(--blush);color:var(--bronze);border-radius:12px;padding:1px 9px;margin-left:6px}
-.pill.me{background:var(--sage);color:#fff}
-.late{color:var(--danger);font-weight:600}
-tr.pdone td{color:var(--ink-soft);text-decoration:line-through;opacity:.7}
+td{padding:9px 6px;vertical-align:top;border-bottom:1px solid rgba(176,141,87,.18)}
+tr:last-child td{border-bottom:none}
+td.t{white-space:nowrap;font-weight:600;color:var(--bronze-text);width:86px;letter-spacing:.06em}
+td.w{color:var(--ink-soft);font-style:italic;width:150px;font-size:.92rem}
+tr.pdone td{color:var(--ink-soft);text-decoration:line-through;opacity:.65}
 tr.pdone td:first-child{text-decoration:none;opacity:1}
 tr.pdone a{text-decoration:underline;display:inline-block}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,textarea,select{font:inherit;font-size:17px;padding:9px 10px;border:1px solid var(--brass);border-radius:8px;background:#fff;color:var(--ink);width:100%}
-textarea{min-height:90px;resize:vertical}
-label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
-.btn{font:inherit;font-size:17px;padding:10px 18px;border-radius:22px;border:1px solid var(--bronze);background:var(--bronze);color:#fff;cursor:pointer;min-height:44px;text-decoration:none;display:inline-block}
-.btn.ghost{background:none;color:var(--bronze)}
-.btn.wa{background:var(--wa);border-color:var(--wa)}
-.btn.sm{padding:5px 12px;min-height:34px;font-size:15px}
+
+/* ---------- tasks ---------- */
+.task{display:flex;gap:13px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(176,141,87,.18)}
+.task:last-child{border-bottom:none}
+.task input[type=checkbox]{width:24px;height:24px;margin-top:3px;accent-color:var(--sage-active);flex:none}
+.task .b{flex:1}
+.task .ti{font-weight:600;font-size:1.06rem;color:var(--ink)}
+.task.done .ti{text-decoration:line-through;color:var(--ink-soft);font-weight:400}
+.meta{font-size:.88rem;color:var(--ink-soft);margin-top:2px}
+.pill{
+  display:inline-block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  background:var(--blush);color:var(--bronze-text);border-radius:2px;padding:2px 8px;margin-left:7px;vertical-align:2px;
+}
+.pill.me{background:var(--sage);color:#fff}
+.late{color:var(--danger);font-weight:600}
+
+/* ---------- forms ---------- */
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+input,textarea,select{
+  font:inherit;font-size:1rem;padding:10px 11px;border:1px solid var(--brass);border-radius:3px;
+  background:#fffdf9;color:var(--ink);width:100%;
+}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px}
+textarea{min-height:96px;resize:vertical}
+label{font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);display:block;margin:11px 0 4px}
+.btn{
+  font:inherit;font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;font-weight:500;
+  padding:13px 26px;border-radius:3px;border:1.5px solid rgba(138,106,53,.75);
+  background:#fffdf9;color:var(--bronze-text);cursor:pointer;min-height:44px;
+  text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 3px 8px rgba(120,90,50,.08);transition:background .3s ease,color .3s ease;
+}
+.btn:hover{background:var(--bronze-text);color:#fff}
+.btn.primary{background:var(--bronze-text);border-color:var(--bronze-text);color:#fff;box-shadow:0 4px 12px rgba(114,87,41,.3)}
+.btn.primary:hover{background:#5c451f}
+.btn.wa{background:var(--whatsapp-green);border-color:var(--whatsapp-green);color:#fff;box-shadow:0 4px 12px rgba(15,122,56,.3)}
+.btn.wa:hover{background:#0c6530}
+.btn.ghost{background:none}
+.btn.sm{padding:7px 14px;min-height:36px;font-size:.74rem}
 .btn:disabled{opacity:.5;cursor:default}
-.small{font-size:15px;color:var(--ink-soft)}
-.msg{padding:10px 12px;border-radius:8px;background:#f3ddc4;color:#5c3d24;margin:8px 0}
-.ok{background:#e4ecdc;color:#3f4c33}
+.small{font-size:.88rem;color:var(--ink-soft)}
+a{color:var(--bronze-text)}
+
+/* ---------- notices ---------- */
+.msg{
+  padding:11px 14px;border-radius:3px;background:var(--notice-bg);color:var(--notice-text);
+  border-left:3px solid var(--notice-border);margin:10px 0;font-size:.94rem;
+}
+.msg.ok{background:#e7eee0;color:#3f4c33;border-left-color:var(--sage-active)}
 .hidden{display:none!important}
-#gate{max-width:440px;margin:30px auto}
-@media(max-width:600px){td.w{display:none}h1{font-size:28px}}
+#gate{max-width:440px;margin:26px auto}
+@media(max-width:600px){
+  td.w{display:none}
+  header{padding:20px 16px 6px}
+  .hero-rings{width:54px;height:54px}
+  .sub{font-size:.7rem;letter-spacing:.1em}
+  nav button{font-size:.68rem;padding:8px 10px}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>Saeed &amp; Aya</h1>
-  <div class="sub">Friday 18 September 2026 · Bellahøjgaard · doors 17.30</div>
+  <div class="hero-rings" aria-hidden="true">
+    <svg viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="goldBand" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8a6410"/><stop offset=".18" stop-color="#d9ac36"/>
+          <stop offset=".38" stop-color="#ffe89a"/><stop offset=".52" stop-color="#f0c74e"/>
+          <stop offset=".72" stop-color="#b8860b"/><stop offset=".88" stop-color="#f2d270"/>
+          <stop offset="1" stop-color="#7d5a0d"/>
+        </linearGradient>
+        <linearGradient id="silverBand" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7f8792"/><stop offset=".18" stop-color="#c3cad4"/>
+          <stop offset=".38" stop-color="#ffffff"/><stop offset=".52" stop-color="#dfe4ea"/>
+          <stop offset=".72" stop-color="#9aa2ae"/><stop offset=".88" stop-color="#eef1f5"/>
+          <stop offset="1" stop-color="#767e89"/>
+        </linearGradient>
+      </defs>
+      <circle cx="40" cy="54" r="24" fill="none" stroke="url(#goldBand)" stroke-width="4.5"/>
+      <circle cx="62" cy="54" r="24" fill="none" stroke="url(#silverBand)" stroke-width="4.5"/>
+      <path d="M62 30 l3.2 5.6 -3.2 5.6 -3.2 -5.6 Z" fill="#eaf3fb" stroke="#cfe2f2" stroke-width=".8"/>
+    </svg>
+  </div>
+  <h1>Saeed <span class="amp">&amp;</span> Aya</h1>
+  <div class="hrule"><span></span></div>
+  <div class="sub">Fredag 18. september 2026 · Bellahøjgaard · kl. 17.30</div>
   <div class="count" id="countdown"></div>
 </header>
 <nav id="nav" class="hidden">
@@ -78,7 +181,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
     <h2 style="margin-top:0">Sign in</h2>
     <div class="small">This page is private. Enter the email Saeed registered for you and we'll send you a sign-in link. You stay signed in on this device afterwards.</div>
     <label>Email</label><input id="email" type="email" autocomplete="email" inputmode="email">
-    <div class="row" style="margin-top:12px"><button class="btn" id="magicBtn">Email me a link</button></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="magicBtn">Email me a link</button></div>
     <div id="loginMsg"></div>
   </div>
 
@@ -97,7 +200,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
         <label>Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
         <div class="row"><div style="flex:1"><label>Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label>Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
         <label>What</label><input id="pWhat"><label>Who</label><input id="pWho">
-        <div class="row" style="margin-top:10px"><button class="btn" id="pSave">Save</button><button class="btn ghost" id="pCancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="pSave">Save</button><button class="btn ghost" id="pCancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
     </section>
 
@@ -112,7 +215,7 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
         <label>Task</label><input id="tTitle">
         <div class="row"><div style="flex:1"><label>Due</label><input id="tDue" type="date"></div><div style="flex:1"><label>Assigned to</label><select id="tAssignee"></select></div></div>
         <label>Notes</label><textarea id="tNotes"></textarea>
-        <div class="row" style="margin-top:10px"><button class="btn" id="tSave">Save</button><button class="btn ghost" id="tCancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="tSave">Save</button><button class="btn ghost" id="tCancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="taskWrap"></div>
     </section>
@@ -130,28 +233,28 @@ label{font-size:15px;color:var(--ink-soft);display:block;margin:8px 0 3px}
       <div id="guestSummary"></div>
       <div class="card row" style="justify-content:space-between">
         <span></span>
-        <button class="btn sm" id="newGuestBtn">+ Add guest</button>
+        <button class="btn sm primary" id="newGuestBtn">+ Add guest</button>
       </div>
       <div id="guestEdit" class="card hidden">
         <h2 style="margin-top:0">Add guest</h2>
         <div class="row"><div style="flex:2"><label>Name</label><input id="gName"></div><div style="flex:1"><label>Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
         <div class="row"><div style="flex:1"><label>Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label>Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
         <label>Note</label><input id="gNote">
-        <div class="row" style="margin-top:10px"><button class="btn" id="gSave">Save</button><button class="btn ghost" id="gCancel">Cancel</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="gSave">Save</button><button class="btn ghost" id="gCancel">Cancel</button></div>
       </div>
       <div id="guestWrap"></div>
     </section>
     <section id="bordplan"><div id="bordplanWrap"></div></section>
 
     <section id="contacts">
-      <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm" id="newContactBtn">+ New contact</button></div>
+      <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm primary" id="newContactBtn">+ New contact</button></div>
       <div id="contactEdit" class="card hidden">
         <h2 style="margin-top:0" id="contactEditTitle">New contact</h2>
         <input type="hidden" id="cId">
         <div class="row"><div style="flex:1"><label>Role</label><input id="cRole" placeholder="DJ, Baker, Chauffeur 1…"></div><div style="flex:1"><label>Name</label><input id="cName"></div></div>
         <div class="row"><div style="flex:1"><label>Phone (with country code)</label><input id="cPhone" placeholder="+45 12 34 56 78"></div><div style="flex:1"><label>Email</label><input id="cEmail" type="email"></div></div>
         <div class="row"><div style="flex:1"><label>Sort</label><input id="cSort" type="number" placeholder="10"></div><div style="flex:2"><label>Note</label><input id="cNote" placeholder="Arrives 16.00, needs 2 × 230 V…"></div></div>
-        <div class="row" style="margin-top:10px"><button class="btn" id="cSave">Save</button><button class="btn ghost" id="cCancel">Cancel</button><button class="btn ghost hidden" id="cDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="cSave">Save</button><button class="btn ghost" id="cCancel">Cancel</button><button class="btn ghost hidden" id="cDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="contactWrap"></div>
     </section>
@@ -322,7 +425,7 @@ function renderGuests(){
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = s => live.filter(g => g.seat && (!s || g.status === s)).length;
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
-  const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px"><div style="font-size:30px;font-weight:600;color:var(--bronze)" class="${cls}">${n}</div><div class="small">${l}</div></div>`;
+  const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px;padding:14px 10px"><div style="font-size:2.1rem;font-weight:500;color:var(--ink);line-height:1.1" class="${cls}">${n}</div><div class="small" style="letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;margin-top:4px">${l}</div></div>`;
   $("guestSummary").innerHTML = `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
     box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(live.filter(g => g.highchair).length, "highchairs") + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
@@ -331,9 +434,9 @@ function renderGuests(){
   const tableSvg = (t, arr) => {
     const seated = arr.filter(g => g.status !== "Afbud"), n = Math.max(seated.length, 1), R = 100, r = 55, cx = 150, cy = 150;
     const cap = CAPS[t] || 0, used = seated.filter(g => g.seat).length;
-    let s = `<svg viewBox="-45 0 390 300" width="100%" style="max-width:380px;display:block;margin:0 auto" font-family="Cormorant Garamond,serif">`;
-    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f6e7d8" stroke="#b08d57" stroke-width="1.5"/>`;
-    s += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="26" font-weight="600" fill="#725729">${t}</text>`;
+    let s = `<svg viewBox="-45 0 390 300" width="100%" style="max-width:380px;display:block;margin:0 auto" font-family="Cormorant Garamond,Georgia,serif">`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f8e0d8" stroke="#b08d57" stroke-width="1.5"/>`;
+    s += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="27" font-weight="500" fill="#725729">${t}</text>`;
     s += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="${cap&&used>cap?"#9b3b2e":"#6e615f"}">${used}${cap?" / "+cap:""}</text>`;
     seated.forEach((g, i) => {
       const a = -Math.PI/2 + i * 2*Math.PI/n, x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
