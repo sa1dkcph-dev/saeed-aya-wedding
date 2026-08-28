@@ -186,9 +186,10 @@ a{color:var(--bronze-text)}
   <!-- login gate -->
   <div id="gate" class="card">
     <h2 style="margin-top:0">Sign in</h2>
-    <div class="small">This page is private. Enter the email Saeed registered for you and we'll send you a sign-in link. You stay signed in on this device afterwards.</div>
-    <label>Email</label><input id="email" type="email" autocomplete="email" inputmode="email">
-    <div class="row" style="margin-top:12px"><button class="btn primary" id="magicBtn">Email me a link</button></div>
+    <div class="small">This page is private. Use the email and password Saeed gave you. You stay signed in on this device afterwards.</div>
+    <label>Email</label><input id="email" type="email" autocomplete="username" inputmode="email">
+    <label>Password</label><input id="password" type="password" autocomplete="current-password">
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="loginBtn">Sign in</button></div>
     <div id="loginMsg"></div>
   </div>
 
@@ -298,14 +299,16 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
 (function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
 
 // ---- auth ----
-$("magicBtn").onclick = async () => {
-  const email = $("email").value.trim().toLowerCase(); if (!email) { $("loginMsg").innerHTML = `<div class="msg">Enter your email first.</div>`; return; }
-  $("magicBtn").disabled = true;
-  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } });
-  $("magicBtn").disabled = false;
-  $("loginMsg").innerHTML = error ? `<div class="msg">${esc(error.message)}</div>` : `<div class="msg ok">Link sent to ${esc(email)}. Open it on this device — check spam if it doesn't arrive within a minute.</div>`;
+$("loginBtn").onclick = async () => {
+  const email = $("email").value.trim().toLowerCase(), password = $("password").value;
+  if (!email || !password) { $("loginMsg").innerHTML = `<div class="msg">Enter both email and password.</div>`; return; }
+  $("loginBtn").disabled = true;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  $("loginBtn").disabled = false;
+  if (error) $("loginMsg").innerHTML = `<div class="msg">${esc(error.message)}</div>`;
 };
-$("email").addEventListener("keydown", e => { if (e.key === "Enter") $("magicBtn").click(); });
+$("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+$("email").addEventListener("keydown", e => { if (e.key === "Enter") $("password").focus(); });
 $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 async function boot(){
