@@ -197,7 +197,7 @@ a{color:var(--bronze-text)}
 <nav id="nav" class="hidden">
   <button data-tab="plan" class="on">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
-  <button data-tab="guests" id="guestsTab" class="hidden">Bordplan</button>
+  <button data-tab="guests" id="guestsTab">Bordplan</button>
   <button data-tab="feedback">Feedback</button>
   <button data-tab="contacts">Contacts</button>
   <button id="logoutBtn">Sign out</button>
@@ -259,7 +259,7 @@ a{color:var(--bronze-text)}
 
     <section id="guests">
       <div id="guestSummary"></div>
-      <div class="card row" style="justify-content:space-between">
+      <div class="card row hidden" id="guestBar" style="justify-content:space-between">
         <div class="row" style="gap:8px">
           <button class="btn sm" id="saveVersionBtn">Save as version</button>
           <button class="btn sm ghost" id="versionsBtn">Versions</button>
@@ -309,6 +309,7 @@ let me = null, members = [], tasks = [], plan = [];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isAdmin = () => me && (me.role === "couple" || me.role === "coordinator");
 const isCouple = () => me && me.role === "couple";
+const isFamily = () => me && ["couple","coordinator","family"].includes(me.role);
 
 // tabs
 document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () => {
@@ -340,8 +341,8 @@ async function boot(){
   $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
   $("meName").textContent = me.name; $("meRole").textContent = me.role;
   $("tasksTab").classList.toggle("hidden", !isAdmin());
-  $("guestsTab").classList.toggle("hidden", !isAdmin());
   $("contactBar").classList.toggle("hidden", !isCouple());
+  $("guestBar").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
   $("newPlanBtn").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
@@ -367,7 +368,8 @@ async function loadAll(){
 }
 function renderPlan(){
   let h = "";
-  for (const s of ["Setup and morning", "Reception"]) {
+  const sections = isAdmin() ? ["Setup and morning", "Reception"] : ["Reception"];
+  for (const s of sections) {
     const rows = plan.filter(r => r.section === s); if (!rows.length) continue;
     h += `<h2>${esc(s)}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
@@ -375,7 +377,8 @@ function renderPlan(){
         <td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">edit</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
-  const d = plan.filter(r => r.done).length; $("planProgress").textContent = plan.length ? `${d} of ${plan.length} done` + (isAdmin() ? " — tick items as they happen" : "") : "";
+  const vis = plan.filter(r => isAdmin() || r.section === "Reception");
+  const d = vis.filter(r => r.done).length; $("planProgress").textContent = vis.length ? `${d} of ${vis.length} done` + (isAdmin() ? " — tick items as they happen" : "") : "";
 }
 function openPlanEdit(r){
   $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = r ? "Edit plan item" : "New plan item";
@@ -451,16 +454,19 @@ const CAPS = {1:9,2:10,3:10,4:10,5:10,6:10,7:9,8:9,9:9};   // chairs per table (
 let guests = [];
 const STATUSES = ["Bekræftet","Afventer","Afbud"];
 async function loadGuests(){
-  const { data, error } = await sb.from("guests").select("*").order("table_no", { nullsFirst: false }).order("id");
+  const { data, error } = isFamily()
+    ? await sb.from("guests").select("*").order("table_no", { nullsFirst: false }).order("id")
+    : await sb.rpc("seating_public");
   if (error) { $("guestWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
-  guests = data; renderGuests();
+  guests = (data || []).slice().sort((a, b) => ((a.table_no ?? 99) - (b.table_no ?? 99)) || (a.id - b.id));
+  renderGuests();
 }
 function renderGuests(){
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = s => live.filter(g => g.seat && (!s || g.status === s)).length;
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
   const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px;padding:14px 10px"><div style="font-size:2.1rem;font-weight:500;color:var(--ink);line-height:1.1" class="${cls}">${n}</div><div class="small" style="letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;margin-top:4px">${l}</div></div>`;
-  $("guestSummary").innerHTML = `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
+  $("guestSummary").innerHTML = !isAdmin() ? "" : `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
     box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(live.filter(g => g.highchair).length, "highchairs") + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
@@ -478,7 +484,7 @@ function renderGuests(){
       const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
       const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
       const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
-      s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:grab;touch-action:none"><title>${esc(g.name)} — tap to move, drag to swap seats</title>`;
+      s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:${isAdmin()?"grab":"default"};touch-action:none"><title>${esc(g.name)} — tap to move, drag to swap seats</title>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="transparent"/>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
       s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text></g>`;
@@ -516,8 +522,8 @@ function renderGuests(){
   const unplaced = byT[0] || [];
   $("guestWrap").innerHTML = `<h2>Hall plan</h2>
     <div class="card" style="padding:10px 6px;overflow-x:auto">${hall}</div>
-    <div class="small" style="margin:2px 8px 14px">Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.</div>` +
-    (unplaced.length ? `<h2>Not placed</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b"><a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a><span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
+    <div class="small" style="margin:2px 8px 14px">Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.${isFamily() ? "" : " Guests are shown by initials."}</div>` +
+    (unplaced.length ? `<h2>Not placed</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b">${isAdmin() ? `<a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}<span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
     `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
     <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.${isAdmin() ? " Drag a name onto another to swap seats." : ""}</div>`;
   wireSeatDrag();
@@ -533,7 +539,7 @@ window.showTable = t => {
     <h2 style="margin-top:0">Table ${t}<span class="pill ${used>CAPS[t]?"late":""}">${used} / ${CAPS[t]}</span></h2>
     ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
     ${arr.length ? `<table>${arr.map(g => `<tr>
-      <td><a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}</td>
+      <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}</td>
       <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">Nobody seated here yet.</div>`}
     <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">Close</button></div></div>`;
   document.body.appendChild(wrap);
@@ -541,6 +547,7 @@ window.showTable = t => {
 };
 window.closeSheets = () => document.querySelectorAll("#moveSheet").forEach(el => el.remove());
 window.moveGuest = id => {
+  if (!isAdmin()) return;
   const g = guests.find(x => x.id === id); if (!g) return;
   const used = t => guests.filter(x => x.table_no === t && x.seat && x.status !== "Afbud").length;
   const wrap = document.createElement("div"); wrap.id = "moveSheet";
