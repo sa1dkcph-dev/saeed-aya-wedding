@@ -139,6 +139,24 @@ a{color:var(--bronze-text)}
 .msg.ok{background:#e7eee0;color:#3f4c33;border-left-color:var(--sage-active)}
 .hidden{display:none!important}
 #gate{max-width:440px;margin:26px auto}
+#printArea{display:none;background:#fff;border:1px solid rgba(176,141,87,.35);border-radius:4px;padding:18px;margin:14px 0}
+#printArea.show{display:block}
+#printArea h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.5rem;font-weight:500;color:var(--bronze-text);margin-bottom:4px}
+#printArea .pmeta{font-size:.82rem;color:var(--ink-soft);margin-bottom:14px}
+#printArea svg{width:100%;height:auto}
+#printArea .ptables{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+#printArea .tb{flex:1 1 150px;border:1px solid rgba(176,141,87,.5);border-radius:3px;padding:8px 10px}
+#printArea .tb h3{font-size:.95rem;font-weight:600;color:var(--bronze-text);margin-bottom:4px;display:flex;justify-content:space-between}
+#printArea .tb h3 span{font-weight:400;color:var(--ink-soft);font-size:.82rem}
+#printArea ol{margin:0;padding-left:18px;font-size:.9rem;line-height:1.55}
+#printArea .pfoot{margin-top:14px;font-size:.78rem;color:var(--ink-soft);font-style:italic}
+@media print{
+  @page{size:A4 landscape;margin:12mm}
+  body{background:#fff!important}
+  header,nav,main,.noprint{display:none!important}
+  #printArea,#printArea.show{display:block!important;border:none;padding:0;margin:0}
+  #printArea .tb{page-break-inside:avoid}
+}
 @media(max-width:600px){
   td.w{display:none}
   header{padding:20px 16px 6px}
@@ -275,6 +293,7 @@ a{color:var(--bronze-text)}
     </section>
   </div>
 </main>
+<div id="printArea"></div>
 
 <script>
 // ===== CONFIG =====
@@ -341,40 +360,29 @@ function tableRows(){
 }
 $("exportPdfBtn").onclick = () => {
   const byT = tableRows();
-  const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
+  const svg = document.querySelector("#guestWrap svg")?.outerHTML.replace(/min-width:640px/, "min-width:0") || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
     const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
-      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
-      `</ol></div>`;
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") + `</ol></div>`;
   }).join("");
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
-  const w = window.open("", "_blank");
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bordplan – Saeed og Aya</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    @page{size:A4 landscape;margin:14mm}
-    body{font-family:'Cormorant Garamond',Georgia,serif;color:#5a5152;margin:0}
-    h1{font-size:20pt;font-weight:500;color:#725729;margin:0 0 2mm}
-    .meta{font-size:9pt;color:#6e615f;margin-bottom:5mm}
-    svg{width:100%;height:auto;max-height:88mm}
-    .tables{display:flex;flex-wrap:wrap;gap:4mm;margin-top:6mm}
-    .tb{flex:0 1 calc(20% - 4mm);min-width:42mm;border:.4pt solid #b08d57;border-radius:1mm;padding:2mm 3mm;page-break-inside:avoid}
-    .tb h3{font-size:11pt;font-weight:600;color:#725729;margin:0 0 1mm;display:flex;justify-content:space-between}
-    .tb h3 span{font-weight:400;color:#6e615f;font-size:9pt}
-    ol{margin:0;padding-left:5mm;font-size:9.5pt;line-height:1.5}
-    .foot{margin-top:5mm;font-size:8pt;color:#6e615f;font-style:italic}
-  </style></head><body>
+  let area = $("printArea");
+  area.innerHTML = `
     <h1>Bordplan – Saeed og Aya</h1>
-    <div class="meta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
+    <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
     ${svg}
-    <div class="tables">${tables}</div>
-    <div class="foot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
-  </body></html>`);
-  w.document.close();
-  w.onload = () => setTimeout(() => w.print(), 400);
+    <div class="ptables">${tables}</div>
+    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
+    <div class="noprint" style="margin-top:18px;display:flex;gap:10px;justify-content:center">
+      <button class="btn primary" onclick="window.print()">Print / gem som PDF</button>
+      <button class="btn" onclick="document.getElementById('printArea').classList.remove('show')">Luk</button>
+    </div>`;
+  area.classList.add("show");
+  area.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => window.print(), 500);
 };
 $("exportXlsBtn").onclick = async () => {
   const btn = $("exportXlsBtn"); btn.disabled = true;
@@ -813,40 +821,29 @@ function tableRows(){
 }
 $("exportPdfBtn").onclick = () => {
   const byT = tableRows();
-  const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
+  const svg = document.querySelector("#guestWrap svg")?.outerHTML.replace(/min-width:640px/, "min-width:0") || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
     const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
-      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
-      `</ol></div>`;
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") + `</ol></div>`;
   }).join("");
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
-  const w = window.open("", "_blank");
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Bordplan – Saeed og Aya</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    @page{size:A4 landscape;margin:14mm}
-    body{font-family:'Cormorant Garamond',Georgia,serif;color:#5a5152;margin:0}
-    h1{font-size:20pt;font-weight:500;color:#725729;margin:0 0 2mm}
-    .meta{font-size:9pt;color:#6e615f;margin-bottom:5mm}
-    svg{width:100%;height:auto;max-height:88mm}
-    .tables{display:flex;flex-wrap:wrap;gap:4mm;margin-top:6mm}
-    .tb{flex:0 1 calc(20% - 4mm);min-width:42mm;border:.4pt solid #b08d57;border-radius:1mm;padding:2mm 3mm;page-break-inside:avoid}
-    .tb h3{font-size:11pt;font-weight:600;color:#725729;margin:0 0 1mm;display:flex;justify-content:space-between}
-    .tb h3 span{font-weight:400;color:#6e615f;font-size:9pt}
-    ol{margin:0;padding-left:5mm;font-size:9.5pt;line-height:1.5}
-    .foot{margin-top:5mm;font-size:8pt;color:#6e615f;font-style:italic}
-  </style></head><body>
+  let area = $("printArea");
+  area.innerHTML = `
     <h1>Bordplan – Saeed og Aya</h1>
-    <div class="meta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
+    <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
     ${svg}
-    <div class="tables">${tables}</div>
-    <div class="foot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
-  </body></html>`);
-  w.document.close();
-  w.onload = () => setTimeout(() => w.print(), 400);
+    <div class="ptables">${tables}</div>
+    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
+    <div class="noprint" style="margin-top:18px;display:flex;gap:10px;justify-content:center">
+      <button class="btn primary" onclick="window.print()">Print / gem som PDF</button>
+      <button class="btn" onclick="document.getElementById('printArea').classList.remove('show')">Luk</button>
+    </div>`;
+  area.classList.add("show");
+  area.scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => window.print(), 500);
 };
 $("exportXlsBtn").onclick = async () => {
   const btn = $("exportXlsBtn"); btn.disabled = true;
