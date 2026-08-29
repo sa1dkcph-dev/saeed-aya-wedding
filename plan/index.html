@@ -93,7 +93,9 @@ tr.pdone a{text-decoration:underline;display:inline-block}
 }
 .pill.me{background:var(--sage);color:#fff}
 .late{color:var(--danger);font-weight:600}
-.seat-g:hover circle:last-of-type{stroke-width:2.5}
+.seat-g:hover circle:nth-of-type(2){stroke-width:2.5}
+.seat-g.drop circle:nth-of-type(2){stroke-width:3.5;stroke:#d4af37}
+.seat-g.drop text{font-weight:600;fill:#725729}
 .seat-g:hover text{font-weight:600}
 #moveSheet{position:fixed;inset:0;z-index:60;background:rgba(90,81,82,.45);display:flex;align-items:center;justify-content:center;padding:18px}
 #moveSheet .card{max-width:420px;width:100%;margin:0;max-height:86vh;overflow:auto}
@@ -341,7 +343,7 @@ $("exportPdfBtn").onclick = () => {
   const byT = tableRows();
   const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
-    const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+    const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
       arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
@@ -379,10 +381,10 @@ $("exportXlsBtn").onclick = async () => {
   try {
     if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
     const byT = tableRows();
-    const rows = [["Bord", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
+    const rows = [["Bord", "Plads", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
-      for (const g of (byT[t] || []))
-        rows.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+      for (const g of (byT[t] || []).slice().sort(seatOrder))
+        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const live = guests.filter(g => g.status !== "Afbud");
     const sum = [["Bord", "Gruppe", "Kuverter", "Højstole", "Max", "Ledige"]];
     for (const t of Object.keys(CAPS).map(Number)) {
@@ -528,7 +530,7 @@ function renderGuests(){
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
   const tableSvg = (t, arr) => {
-    const seated = arr.filter(g => g.status !== "Afbud"), n = Math.max(seated.length, 1), R = 100, r = 55, cx = 150, cy = 150;
+    const seated = arr.filter(g => g.status !== "Afbud").slice().sort(seatOrder), n = Math.max(seated.length, 1), R = 100, r = 55, cx = 150, cy = 150;
     const cap = CAPS[t] || 0, used = seated.filter(g => g.seat).length;
     let s = `<svg viewBox="-45 0 390 300" width="100%" style="max-width:380px;display:block;margin:0 auto" font-family="Cormorant Garamond,Georgia,serif">`;
     s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f8e0d8" stroke="#b08d57" stroke-width="1.5"/>`;
@@ -540,7 +542,7 @@ function renderGuests(){
       const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
       const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
       const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
-      s += `<g class="seat-g" style="cursor:pointer" onclick="moveGuest(${g.id})"><title>${esc(g.name)} — tap to move</title>`;
+      s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:grab;touch-action:none"><title>${esc(g.name)} — tap to move, drag to swap seats</title>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="transparent"/>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
       s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text></g>`;
@@ -581,13 +583,14 @@ function renderGuests(){
     <div class="small" style="margin:2px 8px 14px">Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.</div>` +
     (unplaced.length ? `<h2>Not placed</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b"><a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a><span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
     `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
-    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.</div>`;
+    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.${isAdmin() ? " Drag a name onto another to swap seats." : ""}</div>`;
+  wireSeatDrag();
 }
 async function setStatus(id, status) { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests();
 }
 window.setStatus = setStatus;
 window.showTable = t => {
-  const arr = guests.filter(g => g.table_no === t);
+  const arr = guests.filter(g => g.table_no === t).slice().sort(seatOrder);
   const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
   const wrap = document.createElement("div"); wrap.id = "moveSheet";
   wrap.innerHTML = `<div class="card">
@@ -627,7 +630,7 @@ window.moveGuest = id => {
   wrap.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => {
     const v = b.dataset.t;
     const grp = v ? (guests.find(x => x.table_no === +v && x.grp)?.grp || "") : "Ikke placeret";
-    const { error } = await sb.from("guests").update({ table_no: v ? +v : null, grp, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await sb.from("guests").update({ table_no: v ? +v : null, seat_no: null, grp, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) alert(error.message);
     close(); loadGuests();
   });
@@ -642,8 +645,63 @@ $("gSave").onclick = async () => {
   if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
 };
 
+// ---- seat order + drag to swap ----
+const seatOrder = (a, b) => ((a.seat_no ?? 9999) - (b.seat_no ?? 9999)) || (a.id - b.id);
+function wireSeatDrag(){
+  document.querySelectorAll("#guestWrap .seat-g").forEach(g => {
+    g.onpointerdown = e => {
+      if (!isAdmin()) return;
+      const svg = g.ownerSVGElement, startX = e.clientX, startY = e.clientY;
+      const scale = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+      let moved = false;
+      g.setPointerCapture(e.pointerId); g.style.cursor = "grabbing";
+      const peers = [...svg.querySelectorAll(".seat-g")].filter(o => o !== g);
+      let target = null;
+      const move = ev => {
+        const dx = ev.clientX - startX, dy = ev.clientY - startY;
+        if (!moved && Math.hypot(dx, dy) < 6) return;
+        moved = true;
+        g.setAttribute("transform", `translate(${dx / scale} ${dy / scale})`);
+        g.style.opacity = ".75";
+        const px = +g.dataset.cx + dx / scale, py = +g.dataset.cy + dy / scale;
+        target = null;
+        let best = 34;
+        for (const o of peers) {
+          const d = Math.hypot(+o.dataset.cx - px, +o.dataset.cy - py);
+          o.classList.remove("drop");
+          if (d < best) { best = d; target = o; }
+        }
+        if (target) target.classList.add("drop");
+      };
+      const up = async () => {
+        g.releasePointerCapture(e.pointerId);
+        g.onpointermove = null; g.onpointerup = null; g.onpointercancel = null;
+        g.style.cursor = "grab"; g.style.opacity = ""; g.removeAttribute("transform");
+        peers.forEach(o => o.classList.remove("drop"));
+        if (!moved) { moveGuest(+g.dataset.gid); return; }
+        if (target) await swapSeats(+g.dataset.gid, +target.dataset.gid);
+      };
+      g.onpointermove = move; g.onpointerup = up; g.onpointercancel = up;
+    };
+  });
+}
+async function swapSeats(idA, idB){
+  const a = guests.find(x => x.id === idA), b = guests.find(x => x.id === idB);
+  if (!a || !b) return;
+  const tbl = a.table_no, order = guests.filter(g => g.table_no === tbl && g.status !== "Afbud").slice().sort(seatOrder);
+  if (b.table_no !== tbl) return;                       // only within the same table
+  const ia = order.findIndex(g => g.id === idA), ib = order.findIndex(g => g.id === idB);
+  order.splice(ib, 0, order.splice(ia, 1)[0]);          // move A into B's position
+  for (let i = 0; i < order.length; i++) {
+    if (order[i].seat_no === i + 1) continue;
+    const { error } = await sb.from("guests").update({ seat_no: i + 1, updated_at: new Date().toISOString() }).eq("id", order[i].id);
+    if (error) { alert(error.message); break; }
+  }
+  loadGuests();
+}
+
 // ---- seating versions ----
-const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
+const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, seat_no: g.seat_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
 $("saveVersionBtn").onclick = async () => {
   if (!guests.length) { alert("Nothing to save yet."); return; }
   const { data: existing } = await sb.from("seating_versions").select("id");
@@ -704,7 +762,7 @@ window.restoreVersion = async id => {
   if (!confirm(`Restore "${v.name}"? The current arrangement will be saved first as a backup.`)) return;
   await sb.from("seating_versions").insert({ name: "Before restoring " + v.name, data: guests.map(snapFields), created_by: me.name });
   for (const g of v.data) {
-    const { error } = await sb.from("guests").update({ table_no: g.table_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
+    const { error } = await sb.from("guests").update({ table_no: g.table_no, seat_no: g.seat_no ?? null, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
     if (error) { alert(error.message); break; }
   }
   await loadGuests(); loadVersions();
@@ -757,7 +815,7 @@ $("exportPdfBtn").onclick = () => {
   const byT = tableRows();
   const svg = document.querySelector("#guestWrap svg")?.outerHTML || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
-    const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
+    const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
       arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") +
@@ -795,10 +853,10 @@ $("exportXlsBtn").onclick = async () => {
   try {
     if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
     const byT = tableRows();
-    const rows = [["Bord", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
+    const rows = [["Bord", "Plads", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
-      for (const g of (byT[t] || []))
-        rows.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+      for (const g of (byT[t] || []).slice().sort(seatOrder))
+        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const live = guests.filter(g => g.status !== "Afbud");
     const sum = [["Bord", "Gruppe", "Kuverter", "Højstole", "Max", "Ledige"]];
     for (const t of Object.keys(CAPS).map(Number)) {
