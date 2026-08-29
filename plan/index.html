@@ -358,7 +358,7 @@ function tableRows(){
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   return byT;
 }
-$("exportPdfBtn").onclick = () => {
+$("exportPdfBtn").onclick = () => { try {
   const byT = tableRows();
   const svg = document.querySelector("#guestWrap svg")?.outerHTML.replace(/min-width:640px/, "min-width:0") || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
@@ -370,6 +370,7 @@ $("exportPdfBtn").onclick = () => {
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
   let area = $("printArea");
+  if (!area) { area = document.createElement("div"); area.id = "printArea"; document.body.appendChild(area); }
   area.innerHTML = `
     <h1>Bordplan – Saeed og Aya</h1>
     <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
@@ -382,7 +383,8 @@ $("exportPdfBtn").onclick = () => {
     </div>`;
   area.classList.add("show");
   area.scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => window.print(), 500);
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 500);
+  } catch (e) { alert("PDF: " + e.message); console.error(e); }
 };
 $("exportXlsBtn").onclick = async () => {
   const btn = $("exportXlsBtn"); btn.disabled = true;
@@ -819,7 +821,7 @@ function tableRows(){
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   return byT;
 }
-$("exportPdfBtn").onclick = () => {
+$("exportPdfBtn").onclick = () => { try {
   const byT = tableRows();
   const svg = document.querySelector("#guestWrap svg")?.outerHTML.replace(/min-width:640px/, "min-width:0") || "";
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
@@ -831,6 +833,7 @@ $("exportPdfBtn").onclick = () => {
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
   let area = $("printArea");
+  if (!area) { area = document.createElement("div"); area.id = "printArea"; document.body.appendChild(area); }
   area.innerHTML = `
     <h1>Bordplan – Saeed og Aya</h1>
     <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
@@ -843,7 +846,8 @@ $("exportPdfBtn").onclick = () => {
     </div>`;
   area.classList.add("show");
   area.scrollIntoView({ behavior: "smooth", block: "start" });
-  setTimeout(() => window.print(), 500);
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 500);
+  } catch (e) { alert("PDF: " + e.message); console.error(e); }
 };
 $("exportXlsBtn").onclick = async () => {
   const btn = $("exportXlsBtn"); btn.disabled = true;
