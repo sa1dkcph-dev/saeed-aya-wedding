@@ -199,7 +199,7 @@ a{color:var(--bronze-text)}
   <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
   <button data-tab="guests" id="guestsTab">Bordplan</button>
   <button data-tab="feedback">Feedback</button>
-  <button data-tab="contacts">Contacts</button>
+  <button data-tab="contacts" id="contactsTab" class="hidden">Contacts</button>
   <button id="logoutBtn">Sign out</button>
 </nav>
 <main>
@@ -340,7 +340,8 @@ async function boot(){
   if (!me) { showGate(`Signed in as ${esc(data.session.user.email)}, but that email isn't on the list. Ask Saeed to add you.`); await sb.auth.signOut(); return; }
   $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
   $("meName").textContent = me.name; $("meRole").textContent = me.role;
-  $("tasksTab").classList.toggle("hidden", !isAdmin());
+  $("tasksTab").classList.toggle("hidden", !isFamily());
+  $("contactsTab").classList.toggle("hidden", !isAdmin());
   $("contactBar").classList.toggle("hidden", !isCouple());
   $("guestBar").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
@@ -357,13 +358,13 @@ sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) boot(); });
 async function loadAll(){
   const [m, t, pl] = await Promise.all([
     sb.from("members").select("name,role,sort").order("sort").order("name"),
-    isAdmin() ? sb.from("tasks").select("*").order("due", { nullsFirst: false }).order("id") : Promise.resolve({ data: [] }),
+    isFamily() ? sb.from("tasks").select("*").order("due", { nullsFirst: false }).order("id") : Promise.resolve({ data: [] }),
     sb.from("plan").select("*").order("section", { ascending: false }).order("sort")
   ]);
   if (m.error || t.error || pl.error) { $("status").textContent = "Could not load: " + (m.error||t.error||pl.error).message; return; }
   members = m.data; tasks = t.data; plan = pl.data;
   $("tAssignee").innerHTML = `<option value="">—</option>` + members.map(p => `<option>${esc(p.name)}</option>`).join("");
-  renderPlan(); if (isAdmin()) renderTasks();
+  renderPlan(); if (isFamily()) renderTasks();
   $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
 }
 function renderPlan(){
@@ -401,7 +402,9 @@ function fmtDue(d){ return d ? new Date(d + "T12:00").toLocaleDateString("en-GB"
 function renderTasks(){
   const admin = isAdmin(), mine = me.name, hide = $("hideDone").checked, today = new Date().toISOString().slice(0,10);
   const list = tasks.filter(t => !(hide && t.done));
-  const groups = [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)], ["Everyone else", list.filter(t => t.assignee !== mine)]];
+  const groups = isAdmin()
+    ? [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)], ["Everyone else", list.filter(t => t.assignee !== mine)]]
+    : [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)]];
   let h = "";
   for (const [title, arr] of groups) {
     if (!arr.length) continue;
