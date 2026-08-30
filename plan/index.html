@@ -234,7 +234,6 @@ a{color:var(--bronze-text)}
         <div class="row"><div style="flex:1"><label data-i18n="Time">Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label data-i18n="Sort">Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
         <label data-i18n="What">What</label><input id="pWhat" placeholder="Dansk"><input id="pWhatEn" placeholder="English" style="margin-top:6px">
         <label data-i18n="Who">Who</label><input id="pWho" placeholder="Dansk"><input id="pWhoEn" placeholder="English" style="margin-top:6px">
-        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;text-transform:none;letter-spacing:0;font-size:1rem"><input type="checkbox" id="pPrivate" style="width:20px;height:20px;accent-color:var(--sage-active)"> <span data-i18n="Only visible to Saeed & Aya">Only visible to Saeed &amp; Aya</span></label>
         <div class="row" style="margin-top:10px"><button class="btn primary" id="pSave" data-i18n="Save">Save</button><button class="btn ghost" id="pCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
     </section>
@@ -304,9 +303,9 @@ a{color:var(--bronze-text)}
 
 <script>
 // ===== CONFIG =====
+const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
 const SUPABASE_URL = "https://yqzspsalohjbbddwakiv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_6cdiJL941Yh0uYe0Ynbt5Q_F-HUT2cx";
-const WEDDING = new Date("2026-09-18T17:30:00+02:00");
 const CONTACT = { name: "Saeed", whatsapp: "4560615552" };  // feedback recipient (WhatsApp)
 // ==================
 
@@ -337,13 +336,15 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Only visible to Saeed & Aya":"Kun synligt for Saeed og Aya","private":"privat","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
 // row text in the current language, falling back to the other so nothing ever renders blank
 const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+const OWNERS = ["saeed", "aya"];            // only these members see the created/edited stamps
 const stamp = r => {
+  if (!me || !OWNERS.includes((me.name || "").trim().toLowerCase())) return "";
   const parts = [];
   if (r.created_by || r.created_at) {
     const by = (r.created_by && r.created_by !== "seed") ? " " + T("by") + " " + r.created_by : "";
@@ -434,20 +435,19 @@ function renderPlan(){
   let h = "";
   const sections = isFamily() ? ["Setup and morning", "Reception"] : ["Reception"];
   for (const s of sections) {
-    const rows = plan.filter(r => r.section === s && (isCouple() || !r.private)); if (!rows.length) continue;
+    const rows = plan.filter(r => r.section === s); if (!rows.length) continue;
     h += `<h2>${esc(T(s))}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
         <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
-        <td class="t">${esc(r.time)}</td><td>${r.private?`<span class="pill" title="${T("Only visible to Saeed & Aya")}">${T("private")}</span> `:""}${esc(L(r, "what"))}${stamp(r)?`<div class="meta">${esc(stamp(r))}</div>`:""}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
+        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${stamp(r)?`<div class="meta">${esc(stamp(r))}</div>`:""}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
-  const vis = plan.filter(r => (isCouple() || !r.private) && (isFamily() || r.section === "Reception"));
+  const vis = plan.filter(r => isFamily() || r.section === "Reception");
   const d = vis.filter(r => r.done).length; $("planProgress").textContent = vis.length ? `${d} / ${vis.length} ${T("done")}` + (isAdmin() ? " — " + T("tick items as they happen") : "") : "";
 }
 function openPlanEdit(r){
   $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = T(r ? "Edit plan item" : "New plan item");
   $("pId").value = r?.id || ""; $("pSection").value = r?.section || "Reception"; $("pTime").value = r?.time || ""; $("pSort").value = r?.sort ?? ""; $("pWhat").value = r?.what || ""; $("pWhatEn").value = r?.what_en || ""; $("pWho").value = r?.who || ""; $("pWhoEn").value = r?.who_en || "";
-  $("pPrivate").checked = !!r?.private; $("pPrivate").parentElement.classList.toggle("hidden", !isCouple());
   $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
 }
 window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
@@ -455,7 +455,7 @@ window.planDone = async (id, done) => { const { error } = await sb.from("plan").
 $("newPlanBtn").onclick = () => openPlanEdit(null);
 $("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
-  const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), what_en: $("pWhatEn").value.trim(), who: $("pWho").value.trim(), who_en: $("pWhoEn").value.trim(), private: $("pPrivate").checked };
+  const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), what_en: $("pWhatEn").value.trim(), who: $("pWho").value.trim(), who_en: $("pWhoEn").value.trim() };
   if ((!row.what && !row.what_en) || !row.time) return;
   const id = $("pId").value;
   row.edited_by = me.name; row.edited_at = new Date().toISOString();
