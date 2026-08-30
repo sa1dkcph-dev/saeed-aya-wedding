@@ -336,11 +336,24 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
 // row text in the current language, falling back to the other so nothing ever renders blank
+const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+const stamp = r => {
+  const parts = [];
+  if (r.created_by || r.created_at) {
+    const by = (r.created_by && r.created_by !== "seed") ? " " + T("by") + " " + r.created_by : "";
+    parts.push(`${T("created")}${by}${r.created_at ? " " + when(r.created_at) : ""}`);
+  }
+  const changed = r.edited_at && (!r.created_at || Math.abs(new Date(r.edited_at) - new Date(r.created_at)) > 60000);
+  if (changed || (r.edited_by && !r.created_by)) {
+    parts.push(`${T("edited")}${r.edited_by ? " " + T("by") + " " + r.edited_by : ""}${r.edited_at ? " " + when(r.edited_at) : ""}`);
+  }
+  return parts.join(" · ");
+};
 const L = (row, field) => (lang === "en" ? (row[field + "_en"] || row[field]) : (row[field] || row[field + "_en"])) || "";
 window.T = T;
 function applyLang(){
@@ -424,7 +437,7 @@ function renderPlan(){
     h += `<h2>${esc(T(s))}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
         <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
-        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
+        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${stamp(r)?`<div class="meta">${esc(stamp(r))}</div>`:""}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
   const vis = plan.filter(r => isFamily() || r.section === "Reception");
@@ -436,14 +449,15 @@ function openPlanEdit(r){
   $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
 }
 window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
-window.planDone = async (id, done) => { const { error } = await sb.from("plan").update({ done, done_at: done ? new Date().toISOString() : null }).eq("id", id); if (error) alert(T("Not allowed:") + " " + error.message); loadAll(); };
+window.planDone = async (id, done) => { const { error } = await sb.from("plan").update({ done, done_at: done ? new Date().toISOString() : null, edited_by: me.name, edited_at: new Date().toISOString() }).eq("id", id); if (error) alert(T("Not allowed:") + " " + error.message); loadAll(); };
 $("newPlanBtn").onclick = () => openPlanEdit(null);
 $("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
   const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), what_en: $("pWhatEn").value.trim(), who: $("pWho").value.trim(), who_en: $("pWhoEn").value.trim() };
   if ((!row.what && !row.what_en) || !row.time) return;
   const id = $("pId").value;
-  const { error } = await (id ? sb.from("plan").update(row).eq("id", id) : sb.from("plan").insert(row));
+  row.edited_by = me.name; row.edited_at = new Date().toISOString();
+  const { error } = await (id ? sb.from("plan").update(row).eq("id", id) : sb.from("plan").insert({ ...row, created_by: me.name, created_at: row.edited_at }));
   if (error) alert(error.message); else { $("planEdit").classList.add("hidden"); loadAll(); }
 };
 $("pDelete").onclick = async () => { if (confirm("Remove this plan item?")) { await sb.from("plan").delete().eq("id", $("pId").value); $("planEdit").classList.add("hidden"); loadAll(); } };
@@ -463,7 +477,7 @@ function renderTasks(){
         <input type="checkbox" ${t.done?"checked":""} ${admin?"":"disabled"} onchange="toggle(${t.id},this.checked)" aria-label="done">
         <div class="b"><div class="ti">${esc(L(t, "title"))}${t.assignee?`<span class="pill ${t.assignee===mine?"me":""}">${esc(t.assignee)}</span>`:""}</div>
         ${L(t, "notes")?`<div class="meta">${esc(L(t, "notes"))}</div>`:""}
-        <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>`:""}</div></div></div>`;
+        <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${stamp(t)?` · ${esc(stamp(t))}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>`:""}</div></div></div>`;
     }).join("") + `</div>`;
   }
   $("taskWrap").innerHTML = h || `<div class="card small">${T("No tasks.")}</div>`;
@@ -475,6 +489,10 @@ window.toggle = async (id, done) => {
 };
 function openTaskEdit(t){
   $("taskEdit").classList.remove("hidden"); $("taskEditTitle").textContent = T(t ? "Edit task" : "New task");
+  // keep an assignee that isn't in the member list (old spelling, someone since removed) selectable
+  const names = members.map(m => m.name);
+  if (t?.assignee && !names.includes(t.assignee)) names.push(t.assignee);
+  $("tAssignee").innerHTML = `<option value="">—</option>` + names.map(n => `<option>${esc(n)}</option>`).join("");
   $("tId").value = t?.id || ""; $("tTitle").value = t?.title || ""; $("tTitleEn").value = t?.title_en || ""; $("tDue").value = t?.due || ""; $("tAssignee").value = t?.assignee || ""; $("tNotes").value = t?.notes || ""; $("tNotesEn").value = t?.notes_en || "";
   $("tDelete").classList.toggle("hidden", !t); $("tTitle").focus();
 }
@@ -483,9 +501,12 @@ $("newTaskBtn").onclick = () => openTaskEdit(null);
 $("tCancel").onclick = () => $("taskEdit").classList.add("hidden");
 $("tSave").onclick = async () => {
   const row = { title: $("tTitle").value.trim(), title_en: $("tTitleEn").value.trim(), due: $("tDue").value || null, assignee: $("tAssignee").value, notes: $("tNotes").value.trim(), notes_en: $("tNotesEn").value.trim() };
+  const orig = tasks.find(x => x.id === +$("tId").value);
+  if (orig && orig.assignee && !row.assignee && !confirm(`${T("Remove")} ${orig.assignee} ${T("from this task?")}`)) return;
   if (!row.title && !row.title_en) return;
   const id = $("tId").value;
-  const { error } = await (id ? sb.from("tasks").update(row).eq("id", id) : sb.from("tasks").insert({ ...row, created_by: me.name }));
+  row.edited_by = me.name; row.edited_at = new Date().toISOString();
+  const { error } = await (id ? sb.from("tasks").update(row).eq("id", id) : sb.from("tasks").insert({ ...row, created_by: me.name, created_at: row.edited_at }));
   if (error) alert(error.message); else { $("taskEdit").classList.add("hidden"); loadAll(); }
 };
 $("tDelete").onclick = async () => { if (confirm("Delete this task?")) { await sb.from("tasks").delete().eq("id", $("tId").value); $("taskEdit").classList.add("hidden"); loadAll(); } };
