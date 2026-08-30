@@ -220,7 +220,7 @@ a{color:var(--bronze-text)}
   <button data-tab="plan" class="on" data-i18n="Day plan">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden" data-i18n="Tasks">Tasks</button>
   <button data-tab="guests" id="guestsTab" data-i18n="Bordplan">Bordplan</button>
-  <button data-tab="feedback" data-i18n="Feedback">Feedback</button>
+  <button data-tab="feedback" id="feedbackTab" data-i18n="Feedback">Feedback</button>
   <button data-tab="contacts" id="contactsTab" class="hidden" data-i18n="Contacts">Contacts</button>
   <button id="logoutBtn" data-i18n="Sign out">Sign out</button>
 </nav>
@@ -432,6 +432,7 @@ async function boot(){
   $("meName").textContent = me.name; $("meRole").textContent = T(me.role);
   $("tasksTab").classList.toggle("hidden", !isFamily());
   $("contactsTab").classList.toggle("hidden", !isAdmin());
+  $("feedbackTab").classList.toggle("hidden", isAdmin());
   $("msgFab").classList.toggle("show", canMessage());
   if (canMessage()) loadMessages();
   $("contactBar").classList.toggle("hidden", !isCouple());
