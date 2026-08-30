@@ -32,6 +32,10 @@ body{
 
 /* ---------- header ---------- */
 header{padding:26px 20px 8px;text-align:center;position:relative}
+.langtog{position:absolute;top:12px;right:14px;display:inline-flex;border:1px solid var(--brass);border-radius:999px;overflow:hidden;background:rgba(255,253,249,.8)}
+.langtog button{font:inherit;font-size:.68rem;letter-spacing:.09em;font-weight:600;padding:5px 11px;border:none;background:none;color:var(--bronze-text);cursor:pointer;min-height:30px}
+.langtog button.on{background:var(--bronze-text);color:#fff}
+@media(max-width:600px){.langtog{top:8px;right:10px}}
 .hero-rings{width:62px;height:62px;margin:0 auto 2px}
 .hero-rings svg{width:100%;height:100%;filter:drop-shadow(0 2px 5px rgba(176,141,87,.35))}
 h1{font-family:'Pinyon Script',cursive;font-weight:400;font-size:clamp(2.2rem,7.5vw,3.2rem);color:var(--ink);line-height:1.05}
@@ -168,6 +172,7 @@ a{color:var(--bronze-text)}
 </head>
 <body>
 <header>
+  <div class="langtog" role="group" aria-label="Sprog / Language"><button data-lang="da">DA</button><button data-lang="en">EN</button></div>
   <div class="hero-rings" aria-hidden="true">
     <svg viewBox="0 0 100 100">
       <defs>
@@ -200,7 +205,6 @@ a{color:var(--bronze-text)}
   <button data-tab="guests" id="guestsTab" data-i18n="Bordplan">Bordplan</button>
   <button data-tab="feedback" data-i18n="Feedback">Feedback</button>
   <button data-tab="contacts" id="contactsTab" class="hidden" data-i18n="Contacts">Contacts</button>
-  <button id="langBtn" title="Skift sprog">DA</button>
   <button id="logoutBtn" data-i18n="Sign out">Sign out</button>
 </nav>
 <main>
@@ -222,13 +226,14 @@ a{color:var(--bronze-text)}
 
     <section id="plan" class="on">
       <div id="planWrap"></div>
-      <div class="card row" id="planBar" style="justify-content:space-between"><span class="small" id="planProgress"></span><button class="btn sm hidden" id="newPlanBtn">+ New plan item</button></div>
+      <div class="card row" id="planBar" style="justify-content:space-between"><span class="small" id="planProgress"></span><button class="btn sm hidden primary" id="newPlanBtn" data-i18n="+ New plan item">+ New plan item</button></div>
       <div id="planEdit" class="card hidden">
         <h2 style="margin-top:0" id="planEditTitle" data-i18n="New plan item">New plan item</h2>
         <input type="hidden" id="pId">
         <label data-i18n="Section">Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
         <div class="row"><div style="flex:1"><label data-i18n="Time">Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label data-i18n="Sort">Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
-        <label data-i18n="What">What</label><input id="pWhat"><label data-i18n="Who">Who</label><input id="pWho">
+        <label data-i18n="What">What</label><input id="pWhat" placeholder="Dansk"><input id="pWhatEn" placeholder="English" style="margin-top:6px">
+        <label data-i18n="Who">Who</label><input id="pWho" placeholder="Dansk"><input id="pWhoEn" placeholder="English" style="margin-top:6px">
         <div class="row" style="margin-top:10px"><button class="btn primary" id="pSave" data-i18n="Save">Save</button><button class="btn ghost" id="pCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
     </section>
@@ -241,9 +246,9 @@ a{color:var(--bronze-text)}
       <div id="taskEdit" class="card hidden">
         <h2 style="margin-top:0" id="taskEditTitle" data-i18n="New task">New task</h2>
         <input type="hidden" id="tId">
-        <label data-i18n="Task">Task</label><input id="tTitle">
+        <label data-i18n="Task">Task</label><input id="tTitle" placeholder="Dansk"><input id="tTitleEn" placeholder="English" style="margin-top:6px">
         <div class="row"><div style="flex:1"><label data-i18n="Due">Due</label><input id="tDue" type="date"></div><div style="flex:1"><label data-i18n="Assigned to">Assigned to</label><select id="tAssignee"></select></div></div>
-        <label data-i18n="Notes">Notes</label><textarea id="tNotes"></textarea>
+        <label data-i18n="Notes">Notes</label><textarea id="tNotes" placeholder="Dansk"></textarea><textarea id="tNotesEn" placeholder="English" style="margin-top:6px"></textarea>
         <div class="row" style="margin-top:10px"><button class="btn primary" id="tSave" data-i18n="Save">Save</button><button class="btn ghost" id="tCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="taskWrap"></div>
@@ -335,10 +340,12 @@ const DA = {
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
+// row text in the current language, falling back to the other so nothing ever renders blank
+const L = (row, field) => (lang === "en" ? (row[field + "_en"] || row[field]) : (row[field] || row[field + "_en"])) || "";
 window.T = T;
 function applyLang(){
   document.documentElement.lang = lang;
-  $("langBtn").textContent = lang === "da" ? "EN" : "DA";
+  document.querySelectorAll(".langtog button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
   document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = T(el.dataset.i18n));
   document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = T(el.dataset.i18nHtml));
 }
@@ -368,7 +375,11 @@ $("loginBtn").onclick = async () => {
 };
 $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
 $("email").addEventListener("keydown", e => { if (e.key === "Enter") $("password").focus(); });
-$("langBtn").onclick = () => { lang = lang === "da" ? "en" : "da"; localStorage.setItem("lang", lang); applyLang(); if (me) { renderPlan(); if (isFamily()) renderTasks(); if ($("guestWrap").innerHTML) renderGuests(); } };
+document.querySelectorAll(".langtog button").forEach(b => b.onclick = () => {
+  if (lang === b.dataset.lang) return;
+  lang = b.dataset.lang; localStorage.setItem("lang", lang); applyLang();
+  if (me) { renderPlan(); if (isFamily()) renderTasks(); if ($("guestWrap").innerHTML) renderGuests(); if ($("contactWrap").innerHTML) loadContacts(); }
+});
 $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 async function boot(){
@@ -413,7 +424,7 @@ function renderPlan(){
     h += `<h2>${esc(T(s))}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
         <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
-        <td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
+        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
   const vis = plan.filter(r => isFamily() || r.section === "Reception");
@@ -421,7 +432,7 @@ function renderPlan(){
 }
 function openPlanEdit(r){
   $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = T(r ? "Edit plan item" : "New plan item");
-  $("pId").value = r?.id || ""; $("pSection").value = r?.section || "Reception"; $("pTime").value = r?.time || ""; $("pSort").value = r?.sort ?? ""; $("pWhat").value = r?.what || ""; $("pWho").value = r?.who || "";
+  $("pId").value = r?.id || ""; $("pSection").value = r?.section || "Reception"; $("pTime").value = r?.time || ""; $("pSort").value = r?.sort ?? ""; $("pWhat").value = r?.what || ""; $("pWhatEn").value = r?.what_en || ""; $("pWho").value = r?.who || ""; $("pWhoEn").value = r?.who_en || "";
   $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
 }
 window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
@@ -429,8 +440,8 @@ window.planDone = async (id, done) => { const { error } = await sb.from("plan").
 $("newPlanBtn").onclick = () => openPlanEdit(null);
 $("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
-  const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), who: $("pWho").value.trim() };
-  if (!row.what || !row.time) return;
+  const row = { section: $("pSection").value, time: $("pTime").value.trim(), sort: +$("pSort").value || 99, what: $("pWhat").value.trim(), what_en: $("pWhatEn").value.trim(), who: $("pWho").value.trim(), who_en: $("pWhoEn").value.trim() };
+  if ((!row.what && !row.what_en) || !row.time) return;
   const id = $("pId").value;
   const { error } = await (id ? sb.from("plan").update(row).eq("id", id) : sb.from("plan").insert(row));
   if (error) alert(error.message); else { $("planEdit").classList.add("hidden"); loadAll(); }
@@ -450,8 +461,8 @@ function renderTasks(){
       const late = !t.done && t.due && t.due < today;
       return `<div class="task ${t.done?"done":""}">
         <input type="checkbox" ${t.done?"checked":""} ${admin?"":"disabled"} onchange="toggle(${t.id},this.checked)" aria-label="done">
-        <div class="b"><div class="ti">${esc(t.title)}${t.assignee?`<span class="pill ${t.assignee===mine?"me":""}">${esc(t.assignee)}</span>`:""}</div>
-        ${t.notes?`<div class="meta">${esc(t.notes)}</div>`:""}
+        <div class="b"><div class="ti">${esc(L(t, "title"))}${t.assignee?`<span class="pill ${t.assignee===mine?"me":""}">${esc(t.assignee)}</span>`:""}</div>
+        ${L(t, "notes")?`<div class="meta">${esc(L(t, "notes"))}</div>`:""}
         <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>`:""}</div></div></div>`;
     }).join("") + `</div>`;
   }
@@ -464,15 +475,15 @@ window.toggle = async (id, done) => {
 };
 function openTaskEdit(t){
   $("taskEdit").classList.remove("hidden"); $("taskEditTitle").textContent = T(t ? "Edit task" : "New task");
-  $("tId").value = t?.id || ""; $("tTitle").value = t?.title || ""; $("tDue").value = t?.due || ""; $("tAssignee").value = t?.assignee || ""; $("tNotes").value = t?.notes || "";
+  $("tId").value = t?.id || ""; $("tTitle").value = t?.title || ""; $("tTitleEn").value = t?.title_en || ""; $("tDue").value = t?.due || ""; $("tAssignee").value = t?.assignee || ""; $("tNotes").value = t?.notes || ""; $("tNotesEn").value = t?.notes_en || "";
   $("tDelete").classList.toggle("hidden", !t); $("tTitle").focus();
 }
 window.editTask = id => openTaskEdit(tasks.find(t => t.id === id));
 $("newTaskBtn").onclick = () => openTaskEdit(null);
 $("tCancel").onclick = () => $("taskEdit").classList.add("hidden");
 $("tSave").onclick = async () => {
-  const row = { title: $("tTitle").value.trim(), due: $("tDue").value || null, assignee: $("tAssignee").value, notes: $("tNotes").value.trim() };
-  if (!row.title) return;
+  const row = { title: $("tTitle").value.trim(), title_en: $("tTitleEn").value.trim(), due: $("tDue").value || null, assignee: $("tAssignee").value, notes: $("tNotes").value.trim(), notes_en: $("tNotesEn").value.trim() };
+  if (!row.title && !row.title_en) return;
   const id = $("tId").value;
   const { error } = await (id ? sb.from("tasks").update(row).eq("id", id) : sb.from("tasks").insert({ ...row, created_by: me.name }));
   if (error) alert(error.message); else { $("taskEdit").classList.add("hidden"); loadAll(); }
