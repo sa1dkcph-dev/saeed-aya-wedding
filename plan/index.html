@@ -203,6 +203,7 @@ a{color:var(--bronze-text)}
   <button data-tab="plan" class="on" data-i18n="Day plan">Day plan</button>
   <button data-tab="tasks" id="tasksTab" class="hidden" data-i18n="Tasks">Tasks</button>
   <button data-tab="guests" id="guestsTab" data-i18n="Bordplan">Bordplan</button>
+  <button data-tab="messages" id="messagesTab" class="hidden" data-i18n="Messages">Messages</button>
   <button data-tab="feedback" data-i18n="Feedback">Feedback</button>
   <button data-tab="contacts" id="contactsTab" class="hidden" data-i18n="Contacts">Contacts</button>
   <button id="logoutBtn" data-i18n="Sign out">Sign out</button>
@@ -252,6 +253,15 @@ a{color:var(--bronze-text)}
         <div class="row" style="margin-top:10px"><button class="btn primary" id="tSave" data-i18n="Save">Save</button><button class="btn ghost" id="tCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="taskWrap"></div>
+    </section>
+
+    <section id="messages">
+      <div id="msgWrap"></div>
+      <div class="card">
+        <label data-i18n="Message">Message</label>
+        <textarea id="mBody" placeholder="…"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="mSend" data-i18n="Send">Send</button></div>
+      </div>
     </section>
 
     <section id="feedback">
@@ -336,13 +346,15 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
 // row text in the current language, falling back to the other so nothing ever renders blank
 const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
 const OWNERS = ["saeed", "aya"];            // only these members see the created/edited stamps
+// the Messages thread is between Saeed and the coordinator only
+const canMessage = () => !!me && ((me.name || "").trim().toLowerCase() === "saeed" || me.role === "coordinator");
 const stamp = r => {
   if (!me || !OWNERS.includes((me.name || "").trim().toLowerCase())) return "";
   const parts = [];
@@ -376,6 +388,7 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
   document.querySelectorAll("main section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
   if (b.dataset.tab === "guests") loadGuests();
   if (b.dataset.tab === "contacts") loadContacts();
+  if (b.dataset.tab === "messages") { loadMessages(true); }
 });
 (function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} ${T("days to go")}` : d === 1 ? T("Tomorrow") : d === 0 ? T("Today") : T("Married!"); })();
 
@@ -406,13 +419,15 @@ async function boot(){
   $("meName").textContent = me.name; $("meRole").textContent = T(me.role);
   $("tasksTab").classList.toggle("hidden", !isFamily());
   $("contactsTab").classList.toggle("hidden", !isAdmin());
+  $("messagesTab").classList.toggle("hidden", !canMessage());
+  if (canMessage()) loadMessages();
   $("contactBar").classList.toggle("hidden", !isCouple());
   $("guestBar").classList.toggle("hidden", !isAdmin());
   $("newTaskBtn").classList.toggle("hidden", !isAdmin());
   $("newPlanBtn").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
   await loadAll();
-  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else loadAll(); }).subscribe();
+  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else if (p.table === "messages") loadMessages(); else loadAll(); }).subscribe();
   setInterval(loadAll, 60000);
 }
 function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
@@ -786,6 +801,38 @@ window.restoreVersion = async id => {
   await loadGuests(); loadVersions();
 };
 window.deleteVersion = async id => { if (!confirm("Delete this version?")) return; await sb.from("seating_versions").delete().eq("id", id); loadVersions(); };
+
+// ---- messages (couple + coordinator) ----
+let messages = [];
+async function loadMessages(markRead){
+  if (!canMessage()) return;
+  const { data, error } = await sb.from("messages").select("*").order("created_at");
+  if (error) { $("msgWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
+  messages = data || [];
+  const last = +(localStorage.getItem("msgSeen") || 0);
+  const unread = messages.filter(m => new Date(m.created_at).getTime() > last && m.author !== me.name).length;
+  $("messagesTab").textContent = T("Messages") + (unread ? ` (${unread})` : "");
+  if (markRead) localStorage.setItem("msgSeen", Date.now());
+  $("msgWrap").innerHTML = `<h2>${T("Messages")}</h2>` + (messages.length ? `<div class="card">` + messages.map(m => {
+    const mine = m.author === me.name;
+    return `<div class="task" style="padding:10px 0"><div class="b">
+      <div class="row" style="justify-content:space-between">
+        <b style="color:${mine ? "var(--sage-active)" : "var(--bronze-text)"}">${esc(m.author)}</b>
+        <span class="small">${when(m.created_at)}</span>
+      </div>
+      <div style="margin-top:3px;white-space:pre-wrap">${esc(m.body)}</div>
+      ${mine ? `<div class="small" style="margin-top:4px"><a href="#" onclick="deleteMessage(${m.id});return false">${T("Delete")}</a></div>` : ""}
+    </div></div>`;
+  }).join("") + `</div>` : `<div class="card small">${T("No messages yet.")}</div>`);
+}
+$("mSend").onclick = async () => {
+  const body = $("mBody").value.trim(); if (!body) return;
+  $("mSend").disabled = true;
+  const { error } = await sb.from("messages").insert({ body, author: me.name });
+  $("mSend").disabled = false;
+  if (error) alert(error.message); else { $("mBody").value = ""; localStorage.setItem("msgSeen", Date.now()); loadMessages(true); }
+};
+window.deleteMessage = async id => { if (!confirm(T("Delete") + "?")) return; await sb.from("messages").delete().eq("id", id); loadMessages(); };
 
 // ---- contacts ----
 let contacts = [];
