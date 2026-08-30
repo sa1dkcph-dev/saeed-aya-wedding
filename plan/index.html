@@ -318,7 +318,10 @@ a{color:var(--bronze-text)}
 </main>
 <button id="msgFab" aria-label="Messages"><span data-i18n="Messages">Messages</span><span class="dot hidden" id="msgCount"></span></button>
 <div id="msgPanel"><div class="sheet">
-  <div class="head"><h2 data-i18n="Messages">Messages</h2><button class="btn ghost sm" id="msgClose" data-i18n="Close">Close</button></div>
+  <div class="head">
+    <div><h2 data-i18n="Messages">Messages</h2><div class="small" style="margin-top:2px" data-i18n="Only Saeed and the coordinator can see this">Only Saeed and the coordinator can see this</div></div>
+    <button class="btn ghost sm" id="msgClose" data-i18n="Close">Close</button>
+  </div>
   <div class="body" id="msgWrap"></div>
   <div class="foot"><textarea id="mBody" placeholder="…"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn primary sm" id="mSend" data-i18n="Send">Send</button></div></div>
@@ -360,7 +363,7 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only Saeed and the coordinator can see this":"Kan kun ses af Saeed og koordinatoren","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
