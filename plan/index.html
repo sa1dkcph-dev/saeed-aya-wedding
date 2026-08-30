@@ -319,11 +319,12 @@ a{color:var(--bronze-text)}
 <button id="msgFab" aria-label="Messages"><span data-i18n="Messages">Messages</span><span class="dot hidden" id="msgCount"></span></button>
 <div id="msgPanel"><div class="sheet">
   <div class="head">
-    <div><h2 data-i18n="Messages">Messages</h2><div class="small" style="margin-top:2px" data-i18n="Only Saeed and the coordinator can see this">Only Saeed and the coordinator can see this</div></div>
+    <div><h2 data-i18n="Messages">Messages</h2><div class="small" style="margin-top:2px" id="msgNote"></div></div>
     <button class="btn ghost sm" id="msgClose" data-i18n="Close">Close</button>
   </div>
+  <div class="row hidden" id="threadPick" style="padding:8px 16px 0;gap:6px"></div>
   <div class="body" id="msgWrap"></div>
-  <div class="foot"><textarea id="mBody" placeholder="…"></textarea>
+  <div class="foot"><div id="replyTo" class="msg hidden" style="margin:0 0 8px;padding:7px 10px;font-size:.85rem"></div><textarea id="mBody" placeholder="…"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn primary sm" id="mSend" data-i18n="Send">Send</button></div></div>
 </div></div>
 <div id="printArea"></div>
@@ -363,7 +364,7 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Only Saeed and the coordinator can see this":"Kan kun ses af Saeed og koordinatoren","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
@@ -371,7 +372,18 @@ const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
 const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
 const OWNERS = ["saeed", "aya"];            // only these members see the created/edited stamps
 // the Messages thread is between Saeed and the coordinator only
-const canMessage = () => !!me && ((me.name || "").trim().toLowerCase() === "saeed" || me.role === "coordinator");
+const myName = () => (me?.name || "").trim().toLowerCase();
+const isCoord = () => me?.role === "coordinator";
+// two separate threads: Saeed↔coordinator and Aya↔coordinator
+const myThreads = () => isCoord() ? ["saeed", "aya"] : (["saeed", "aya"].includes(myName()) ? [myName()] : []);
+const canMessage = () => myThreads().length > 0;
+let thread = null;
+const cmtFor = (kind, id) => comments.filter(c => c.target === kind && c.target_id === id);
+const cmtLink = (kind, id) => {
+  if (!isAdmin()) return "";
+  const n = cmtFor(kind, id).length;
+  return ` · <a href="#" onclick="openComments('${kind}',${id});return false">${T("Comments")}${n ? ` (${n})` : ""}</a>`;
+};
 const stamp = r => {
   if (!me || !OWNERS.includes((me.name || "").trim().toLowerCase())) return "";
   const parts = [];
@@ -444,13 +456,18 @@ async function boot(){
   $("newPlanBtn").classList.toggle("hidden", !isAdmin());
   renderFeedbackButtons();
   await loadAll();
-  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else if (p.table === "messages") loadMessages(); else loadAll(); }).subscribe();
+  sb.channel("live").on("postgres_changes", { event: "*", schema: "public" }, p => { if (p.table === "guests") loadGuests(); else if (p.table === "contacts") loadContacts(); else if (p.table === "messages") loadMessages(); else if (p.table === "comments") loadAll(); else loadAll(); }).subscribe();
   setInterval(loadAll, 60000);
 }
 function showGate(msg){ $("gate").classList.remove("hidden"); $("app").classList.add("hidden"); $("nav").classList.add("hidden"); if (msg) $("loginMsg").innerHTML = `<div class="msg">${msg}</div>`; }
 sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_IN" && !me) boot(); });
 
 // ---- data ----
+async function loadComments(){
+  if (!isAdmin()) { comments = []; return; }
+  const { data } = await sb.from("comments").select("*").order("created_at");
+  comments = data || [];
+}
 async function loadAll(){
   const [m, t, pl] = await Promise.all([
     sb.from("members").select("name,role,sort").order("sort").order("name"),
@@ -460,6 +477,7 @@ async function loadAll(){
   if (m.error || t.error || pl.error) { $("status").textContent = "Could not load: " + (m.error||t.error||pl.error).message; return; }
   members = m.data; tasks = t.data; plan = pl.data;
   $("tAssignee").innerHTML = `<option value="">—</option>` + members.map(p => `<option>${esc(p.name)}</option>`).join("");
+  await loadComments();
   renderPlan(); if (isFamily()) renderTasks();
   $("status").textContent = `${T("Updated")} ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
 }
@@ -471,7 +489,7 @@ function renderPlan(){
     h += `<h2>${esc(T(s))}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
         <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
-        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${stamp(r)?`<div class="meta">${esc(stamp(r))}</div>`:""}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
+        <td class="t">${esc(r.time)}</td><td>${esc(L(r, "what"))}${stamp(r)?`<div class="meta">${esc(stamp(r))}</div>`:""}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a><span class="small">${cmtLink("plan", r.id)}</span>`:""}</td><td class="w">${esc(L(r, "who"))}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
   const vis = plan.filter(r => isFamily() || r.section === "Reception");
@@ -511,7 +529,7 @@ function renderTasks(){
         <input type="checkbox" ${t.done?"checked":""} ${admin?"":"disabled"} onchange="toggle(${t.id},this.checked)" aria-label="done">
         <div class="b"><div class="ti">${esc(L(t, "title"))}${t.assignee?`<span class="pill ${t.assignee===mine?"me":""}">${esc(t.assignee)}</span>`:""}</div>
         ${L(t, "notes")?`<div class="meta">${esc(L(t, "notes"))}</div>`:""}
-        <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${stamp(t)?` · ${esc(stamp(t))}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>`:""}</div></div></div>`;
+        <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${stamp(t)?` · ${esc(stamp(t))}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>${cmtLink("task", t.id)}`:""}</div></div></div>`;
     }).join("") + `</div>`;
   }
   $("taskWrap").innerHTML = h || `<div class="card small">${T("No tasks.")}</div>`;
@@ -821,39 +839,107 @@ window.deleteVersion = async id => { if (!confirm("Delete this version?")) retur
 
 // ---- messages (couple + coordinator) ----
 let messages = [];
+let comments = [];
 async function loadMessages(markRead){
   if (!canMessage()) return;
+  if (!thread) thread = myThreads()[0];
   const { data, error } = await sb.from("messages").select("*").order("created_at");
   if (error) { $("msgWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
-  messages = data || [];
-  const last = +(localStorage.getItem("msgSeen") || 0);
-  const unread = messages.filter(m => new Date(m.created_at).getTime() > last && m.author !== me.name).length;
+  const all = data || [];
+  messages = all.filter(m => (m.thread || "saeed") === thread);
+  const seen = th => +(localStorage.getItem("msgSeen:" + th) || 0);
+  const unreadIn = th => all.filter(m => (m.thread || "saeed") === th && new Date(m.created_at).getTime() > seen(th) && m.author !== me.name).length;
+  const unread = myThreads().reduce((n, th) => n + unreadIn(th), 0);
   $("msgCount").textContent = unread || "";
   $("msgCount").classList.toggle("hidden", !unread);
-  if (markRead) localStorage.setItem("msgSeen", Date.now());
-  $("msgWrap").innerHTML = (messages.length ? `<div>` + messages.map(m => {
+  if (markRead) localStorage.setItem("msgSeen:" + thread, Date.now());
+  // thread switcher (coordinator only)
+  const pick = $("threadPick");
+  pick.classList.toggle("hidden", myThreads().length < 2);
+  if (myThreads().length > 1) pick.innerHTML = myThreads().map(th => {
+    const n = unreadIn(th);
+    return `<button class="btn sm ${th === thread ? "primary" : "ghost"}" onclick="switchThread('${th}')">${th === "saeed" ? "Saeed" : "Aya"}${n ? ` (${n})` : ""}</button>`;
+  }).join("");
+  $("msgNote").textContent = isCoord()
+    ? T("Private thread with") + " " + (thread === "saeed" ? "Saeed" : "Aya")
+    : T("Only you and the coordinator can see this");
+  const bubble = (m, depth) => {
     const mine = m.author === me.name;
-    return `<div class="task" style="padding:10px 0"><div class="b">
+    const kids = messages.filter(x => x.parent_id === m.id);
+    return `<div class="task" style="padding:10px 0;${depth ? "margin-left:16px;border-left:2px solid rgba(176,141,87,.35);padding-left:12px;border-bottom:none" : ""}"><div class="b">
       <div class="row" style="justify-content:space-between">
         <b style="color:${mine ? "var(--sage-active)" : "var(--bronze-text)"}">${esc(m.author)}</b>
         <span class="small">${when(m.created_at)}</span>
       </div>
       <div style="margin-top:3px;white-space:pre-wrap">${esc(m.body)}</div>
-      ${mine ? `<div class="small" style="margin-top:4px"><a href="#" onclick="deleteMessage(${m.id});return false">${T("Delete")}</a></div>` : ""}
-    </div></div>`;
-  }).join("") + `</div>` : `<div class="small" style="padding:18px 0;text-align:center">${T("No messages yet.")}</div>`);
+      <div class="small" style="margin-top:4px">
+        <a href="#" onclick="replyTo(${m.id});return false">${T("Reply")}</a>${mine ? ` · <a href="#" onclick="deleteMessage(${m.id});return false">${T("Delete")}</a>` : ""}
+      </div>
+    </div></div>` + kids.map(k => bubble(k, depth + 1)).join("");
+  };
+  const roots = messages.filter(m => !m.parent_id);
+  $("msgWrap").innerHTML = (messages.length ? `<div>` + roots.map(m => bubble(m, 0)).join("") + `</div>` : `<div class="small" style="padding:18px 0;text-align:center">${T("No messages yet.")}</div>`);
   const bd = $("msgWrap"); bd.scrollTop = bd.scrollHeight;
 }
 $("mSend").onclick = async () => {
   const body = $("mBody").value.trim(); if (!body) return;
   $("mSend").disabled = true;
-  const { error } = await sb.from("messages").insert({ body, author: me.name });
+  const { error } = await sb.from("messages").insert({ body, author: me.name, thread, parent_id: replyParent });
   $("mSend").disabled = false;
-  if (error) alert(error.message); else { $("mBody").value = ""; localStorage.setItem("msgSeen", Date.now()); loadMessages(true); }
+  if (error) alert(error.message); else { $("mBody").value = ""; clearReply(); localStorage.setItem("msgSeen:" + thread, Date.now()); loadMessages(true); }
 };
 $("msgFab").onclick = () => { $("msgPanel").classList.add("show"); loadMessages(true); setTimeout(() => $("mBody").focus(), 100); };
 $("msgClose").onclick = () => $("msgPanel").classList.remove("show");
 document.addEventListener("keydown", e => { if (e.key === "Escape") $("msgPanel").classList.remove("show"); });
+let replyParent = null;
+window.openComments = (kind, id) => {
+  if (!isAdmin()) return;
+  const rows = cmtFor(kind, id);
+  const label = kind === "plan"
+    ? (() => { const r = plan.find(x => x.id === id); return r ? `${r.time} · ${L(r, "what")}` : ""; })()
+    : (() => { const t = tasks.find(x => x.id === id); return t ? L(t, "title") : ""; })();
+  const wrap = document.createElement("div"); wrap.id = "moveSheet";
+  wrap.innerHTML = `<div class="card">
+    <h2 style="margin-top:0">${T("Comments")}</h2>
+    <div class="small" style="text-align:center;margin-bottom:8px">${esc(label)}</div>
+    <div class="small" style="text-align:center;margin-bottom:10px">${T("Only the couple and the coordinator can see these")}</div>
+    <div style="max-height:44vh;overflow:auto">${rows.length ? rows.map(c => `
+      <div class="task" style="padding:9px 0"><div class="b">
+        <div class="row" style="justify-content:space-between"><b style="color:${c.author === me.name ? "var(--sage-active)" : "var(--bronze-text)"}">${esc(c.author)}</b><span class="small">${when(c.created_at)}</span></div>
+        <div style="margin-top:2px;white-space:pre-wrap">${esc(c.body)}</div>
+        ${c.author === me.name ? `<div class="small" style="margin-top:3px"><a href="#" onclick="deleteComment(${c.id},'${kind}',${id});return false">${T("Delete")}</a></div>` : ""}
+      </div></div>`).join("") : `<div class="small" style="text-align:center;padding:14px 0">${T("No comments yet.")}</div>`}</div>
+    <textarea id="cmtBody" placeholder="…" style="margin-top:10px"></textarea>
+    <div class="row" style="margin-top:10px;justify-content:space-between">
+      <button class="btn ghost" onclick="closeSheets()">${T("Close")}</button>
+      <button class="btn primary" id="cmtSend">${T("Send")}</button>
+    </div></div>`;
+  document.body.appendChild(wrap);
+  wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
+  wrap.querySelector("#cmtSend").onclick = async () => {
+    const body = wrap.querySelector("#cmtBody").value.trim(); if (!body) return;
+    const { error } = await sb.from("comments").insert({ target: kind, target_id: id, author: me.name, body });
+    if (error) { alert(error.message); return; }
+    await loadComments(); wrap.remove(); openComments(kind, id);
+    renderPlan(); if (isFamily()) renderTasks();
+  };
+  setTimeout(() => wrap.querySelector("#cmtBody").focus(), 80);
+};
+window.deleteComment = async (cid, kind, id) => {
+  if (!confirm(T("Delete") + "?")) return;
+  await sb.from("comments").delete().eq("id", cid);
+  await loadComments(); closeSheets(); openComments(kind, id);
+  renderPlan(); if (isFamily()) renderTasks();
+};
+window.replyTo = id => {
+  const m = messages.find(x => x.id === id); if (!m) return;
+  replyParent = id;
+  $("replyTo").classList.remove("hidden");
+  $("replyTo").innerHTML = `${T("Replying to")} <b>${esc(m.author)}</b>: ${esc(m.body.slice(0, 60))}${m.body.length > 60 ? "…" : ""} <a href="#" onclick="clearReply();return false">${T("Cancel")}</a>`;
+  $("mBody").focus();
+};
+window.clearReply = () => { replyParent = null; $("replyTo").classList.add("hidden"); $("replyTo").innerHTML = ""; };
+window.switchThread = th => { thread = th; clearReply(); loadMessages(true); setTimeout(() => $("mBody").focus(), 80); };
 window.deleteMessage = async id => { if (!confirm(T("Delete") + "?")) return; await sb.from("messages").delete().eq("id", id); loadMessages(); };
 
 // ---- contacts ----
