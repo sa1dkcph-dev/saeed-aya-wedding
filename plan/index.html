@@ -195,27 +195,28 @@ a{color:var(--bronze-text)}
   <div class="count" id="countdown"></div>
 </header>
 <nav id="nav" class="hidden">
-  <button data-tab="plan" class="on">Day plan</button>
-  <button data-tab="tasks" id="tasksTab" class="hidden">Tasks</button>
-  <button data-tab="guests" id="guestsTab">Bordplan</button>
-  <button data-tab="feedback">Feedback</button>
-  <button data-tab="contacts" id="contactsTab" class="hidden">Contacts</button>
-  <button id="logoutBtn">Sign out</button>
+  <button data-tab="plan" class="on" data-i18n="Day plan">Day plan</button>
+  <button data-tab="tasks" id="tasksTab" class="hidden" data-i18n="Tasks">Tasks</button>
+  <button data-tab="guests" id="guestsTab" data-i18n="Bordplan">Bordplan</button>
+  <button data-tab="feedback" data-i18n="Feedback">Feedback</button>
+  <button data-tab="contacts" id="contactsTab" class="hidden" data-i18n="Contacts">Contacts</button>
+  <button id="langBtn" title="Skift sprog">DA</button>
+  <button id="logoutBtn" data-i18n="Sign out">Sign out</button>
 </nav>
 <main>
   <!-- login gate -->
   <div id="gate" class="card">
-    <h2 style="margin-top:0">Sign in</h2>
-    <div class="small">This page is private. Use the email and password Saeed gave you. You stay signed in on this device afterwards.</div>
-    <label>Email</label><input id="email" type="email" autocomplete="username" inputmode="email">
-    <label>Password</label><input id="password" type="password" autocomplete="current-password">
-    <div class="row" style="margin-top:12px"><button class="btn primary" id="loginBtn">Sign in</button></div>
+    <h2 style="margin-top:0" data-i18n="Sign in">Sign in</h2>
+    <div class="small" data-i18n="This page is private. Use the email and password Saeed gave you. You stay signed in on this device afterwards.">This page is private. Use the email and password Saeed gave you. You stay signed in on this device afterwards.</div>
+    <label data-i18n="Email">Email</label><input id="email" type="email" autocomplete="username" inputmode="email">
+    <label data-i18n="Password">Password</label><input id="password" type="password" autocomplete="current-password">
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="loginBtn" data-i18n="Sign in">Sign in</button></div>
     <div id="loginMsg"></div>
   </div>
 
   <div id="app" class="hidden">
     <div class="card row" style="justify-content:space-between">
-      <div><span class="small">Signed in as</span> <b id="meName"></b> <span class="pill" id="meRole"></span></div>
+      <div><span class="small" data-i18n="Signed in as">Signed in as</span> <b id="meName"></b> <span class="pill" id="meRole"></span></div>
       <div class="small" id="status"></div>
     </div>
 
@@ -223,36 +224,36 @@ a{color:var(--bronze-text)}
       <div id="planWrap"></div>
       <div class="card row" id="planBar" style="justify-content:space-between"><span class="small" id="planProgress"></span><button class="btn sm hidden" id="newPlanBtn">+ New plan item</button></div>
       <div id="planEdit" class="card hidden">
-        <h2 style="margin-top:0" id="planEditTitle">New plan item</h2>
+        <h2 style="margin-top:0" id="planEditTitle" data-i18n="New plan item">New plan item</h2>
         <input type="hidden" id="pId">
-        <label>Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
-        <div class="row"><div style="flex:1"><label>Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label>Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
-        <label>What</label><input id="pWhat"><label>Who</label><input id="pWho">
-        <div class="row" style="margin-top:10px"><button class="btn primary" id="pSave">Save</button><button class="btn ghost" id="pCancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <label data-i18n="Section">Section</label><select id="pSection"><option>Setup and morning</option><option>Reception</option></select>
+        <div class="row"><div style="flex:1"><label data-i18n="Time">Time</label><input id="pTime" placeholder="18.25"></div><div style="flex:1"><label data-i18n="Sort">Sort</label><input id="pSort" type="number" placeholder="3"></div></div>
+        <label data-i18n="What">What</label><input id="pWhat"><label data-i18n="Who">Who</label><input id="pWho">
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="pSave" data-i18n="Save">Save</button><button class="btn ghost" id="pCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="pDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
     </section>
 
     <section id="tasks">
       <div class="card row" style="justify-content:space-between">
-        <label style="margin:0"><input type="checkbox" id="hideDone" style="width:auto"> hide done</label>
+        <label style="margin:0"><input type="checkbox" id="hideDone" style="width:auto"> <span data-i18n="hide done">hide done</span></label>
         <button class="btn sm hidden" id="newTaskBtn">+ New task</button>
       </div>
       <div id="taskEdit" class="card hidden">
-        <h2 style="margin-top:0" id="taskEditTitle">New task</h2>
+        <h2 style="margin-top:0" id="taskEditTitle" data-i18n="New task">New task</h2>
         <input type="hidden" id="tId">
-        <label>Task</label><input id="tTitle">
-        <div class="row"><div style="flex:1"><label>Due</label><input id="tDue" type="date"></div><div style="flex:1"><label>Assigned to</label><select id="tAssignee"></select></div></div>
-        <label>Notes</label><textarea id="tNotes"></textarea>
-        <div class="row" style="margin-top:10px"><button class="btn primary" id="tSave">Save</button><button class="btn ghost" id="tCancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <label data-i18n="Task">Task</label><input id="tTitle">
+        <div class="row"><div style="flex:1"><label data-i18n="Due">Due</label><input id="tDue" type="date"></div><div style="flex:1"><label data-i18n="Assigned to">Assigned to</label><select id="tAssignee"></select></div></div>
+        <label data-i18n="Notes">Notes</label><textarea id="tNotes"></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="tSave" data-i18n="Save">Save</button><button class="btn ghost" id="tCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="tDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="taskWrap"></div>
     </section>
 
     <section id="feedback">
       <div class="card">
-        <h2 style="margin-top:0">Feedback &amp; suggestions</h2>
-        <div class="small">Write it here, then send it to Saeed on WhatsApp.</div>
-        <label>Message</label><textarea id="fMsg" placeholder="A suggestion, a question, something you've noticed…"></textarea>
+        <h2 style="margin-top:0" data-i18n="Feedback & suggestions">Feedback &amp; suggestions</h2>
+        <div class="small" data-i18n="Write it here, then send it to Saeed on WhatsApp.">Write it here, then send it to Saeed on WhatsApp.</div>
+        <label data-i18n="Message">Message</label><textarea id="fMsg" placeholder="A suggestion, a question, something you've noticed…"></textarea>
         <div class="row" style="margin-top:10px" id="fButtons"></div>
       </div>
     </section>
@@ -261,33 +262,33 @@ a{color:var(--bronze-text)}
       <div id="guestSummary"></div>
       <div class="card row hidden" id="guestBar" style="justify-content:space-between">
         <div class="row" style="gap:8px">
-          <button class="btn sm" id="saveVersionBtn">Save as version</button>
-          <button class="btn sm ghost" id="versionsBtn">Versions</button>
+          <button class="btn sm" id="saveVersionBtn" data-i18n="Save as version">Save as version</button>
+          <button class="btn sm ghost" id="versionsBtn" data-i18n="Versions">Versions</button>
           <button class="btn sm ghost" id="exportPdfBtn">PDF</button>
           <button class="btn sm ghost" id="exportXlsBtn">Excel</button>
         </div>
-        <button class="btn sm primary" id="newGuestBtn">+ Add guest</button>
+        <button class="btn sm primary" id="newGuestBtn" data-i18n="+ Add guest">+ Add guest</button>
       </div>
       <div id="versionsWrap"></div>
       <div id="guestEdit" class="card hidden">
-        <h2 style="margin-top:0">Add guest</h2>
-        <div class="row"><div style="flex:2"><label>Name</label><input id="gName"></div><div style="flex:1"><label>Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
-        <div class="row"><div style="flex:1"><label>Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label>Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
-        <label>Note</label><input id="gNote">
-        <div class="row" style="margin-top:10px"><button class="btn primary" id="gSave">Save</button><button class="btn ghost" id="gCancel">Cancel</button></div>
+        <h2 style="margin-top:0" data-i18n="Add guest">Add guest</h2>
+        <div class="row"><div style="flex:2"><label data-i18n="Name">Name</label><input id="gName"></div><div style="flex:1"><label data-i18n="Table (blank = unplaced)">Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
+        <div class="row"><div style="flex:1"><label data-i18n="Status">Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label data-i18n="Seat">Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
+        <label data-i18n="Note">Note</label><input id="gNote">
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="gSave" data-i18n="Save">Save</button><button class="btn ghost" id="gCancel" data-i18n="Cancel">Cancel</button></div>
       </div>
       <div id="guestWrap"></div>
     </section>
 
     <section id="contacts">
-      <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm primary" id="newContactBtn">+ New contact</button></div>
+      <div class="card row hidden" id="contactBar" style="justify-content:flex-end"><button class="btn sm primary" id="newContactBtn" data-i18n="+ New contact">+ New contact</button></div>
       <div id="contactEdit" class="card hidden">
-        <h2 style="margin-top:0" id="contactEditTitle">New contact</h2>
+        <h2 style="margin-top:0" id="contactEditTitle" data-i18n="New contact">New contact</h2>
         <input type="hidden" id="cId">
-        <div class="row"><div style="flex:1"><label>Role</label><input id="cRole" placeholder="DJ, Baker, Chauffeur 1…"></div><div style="flex:1"><label>Name</label><input id="cName"></div></div>
-        <div class="row"><div style="flex:1"><label>Phone (with country code)</label><input id="cPhone" placeholder="+45 12 34 56 78"></div><div style="flex:1"><label>Email</label><input id="cEmail" type="email"></div></div>
-        <div class="row"><div style="flex:1"><label>Sort</label><input id="cSort" type="number" placeholder="10"></div><div style="flex:2"><label>Note</label><input id="cNote" placeholder="Arrives 16.00, needs 2 × 230 V…"></div></div>
-        <div class="row" style="margin-top:10px"><button class="btn primary" id="cSave">Save</button><button class="btn ghost" id="cCancel">Cancel</button><button class="btn ghost hidden" id="cDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
+        <div class="row"><div style="flex:1"><label data-i18n="Role">Role</label><input id="cRole" placeholder="DJ, Baker, Chauffeur 1…"></div><div style="flex:1"><label data-i18n="Name">Name</label><input id="cName"></div></div>
+        <div class="row"><div style="flex:1"><label data-i18n="Phone (with country code)">Phone (with country code)</label><input id="cPhone" placeholder="+45 12 34 56 78"></div><div style="flex:1"><label data-i18n="Email">Email</label><input id="cEmail" type="email"></div></div>
+        <div class="row"><div style="flex:1"><label data-i18n="Sort">Sort</label><input id="cSort" type="number" placeholder="10"></div><div style="flex:2"><label data-i18n="Note">Note</label><input id="cNote" placeholder="Arrives 16.00, needs 2 × 230 V…"></div></div>
+        <div class="row" style="margin-top:10px"><button class="btn primary" id="cSave" data-i18n="Save">Save</button><button class="btn ghost" id="cCancel" data-i18n="Cancel">Cancel</button><button class="btn ghost hidden" id="cDelete" style="margin-left:auto;color:var(--danger);border-color:var(--danger)">Delete</button></div>
       </div>
       <div id="contactWrap"></div>
     </section>
@@ -305,6 +306,42 @@ const CONTACT = { name: "Saeed", whatsapp: "4560615552" };  // feedback recipien
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 const $ = id => document.getElementById(id);
+// ---- language ----
+const DA = {
+  "Sign in":"Log ind","Sign out":"Log ud","Day plan":"Dagsplan","Tasks":"Opgaver","Bordplan":"Bordplan","Feedback":"Feedback","Contacts":"Kontakter",
+  "This page is private. Use the email and password Saeed gave you. You stay signed in on this device afterwards.":"Denne side er privat. Brug den e-mail og adgangskode, Saeed har givet dig. Du forbliver logget ind på denne enhed.",
+  "Email":"E-mail","Password":"Adgangskode","Enter both email and password.":"Udfyld både e-mail og adgangskode.",
+  "Signed in as":"Logget ind som","Updated":"Opdateret","days to go":"dage tilbage","Tomorrow":"I morgen","Today":"I dag","Married!":"Gift!",
+  "Setup and morning":"Opsætning og formiddag","Reception":"Fest","done":"udført","tick items as they happen":"sæt flueben efterhånden",
+  "New plan item":"Nyt punkt","Edit plan item":"Rediger punkt","+ New plan item":"+ Nyt punkt","Section":"Afsnit","Time":"Tid","Sort":"Rækkefølge","What":"Hvad","Who":"Hvem",
+  "Save":"Gem","Cancel":"Fortryd","Delete":"Slet","edit":"rediger","Close":"Luk",
+  "hide done":"skjul udførte","+ New task":"+ Ny opgave","New task":"Ny opgave","Edit task":"Rediger opgave","Task":"Opgave","Due":"Frist","Assigned to":"Tildelt","Notes":"Noter",
+  "your tasks":"dine opgaver","Everyone else":"Alle andre","No tasks.":"Ingen opgaver.","overdue":"overskredet","ticked by":"afkrydset af","No date":"Ingen dato",
+  "RSVP overview":"Svaroversigt","chairs needed":"stole i alt","confirmed":"bekræftet","awaiting reply":"afventer svar","highchairs":"højstole",
+  "Save as version":"Gem som version","Versions":"Versioner","+ Add guest":"+ Tilføj gæst","Add guest":"Tilføj gæst","Name":"Navn","Status":"Status","Note":"Note",
+  "Table (blank = unplaced)":"Bord (tomt = ikke placeret)","Seat":"Plads","Chair":"Stol","Baby (no chair)":"Barn u. 2 år (ingen stol)",
+  "Hall plan":"Salsplan","Tables":"Borde","Not placed":"Ikke placeret","Currently":"Lige nu","at table":"ved bord","not placed":"ikke placeret","Move to table":"Flyt til bord",
+  "Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.":"Tryk på et bord for at se, hvem der sidder der. Brudeparret er i vestenden (til venstre); indgang og DJ i østenden. Scroll sidelæns på mobil.",
+  "Guests are shown by initials.":"Gæster vises med initialer.",
+  "confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.":"bekræftet &nbsp; ◌ afventer svar &nbsp; lille ○ barn på skødet. Afbud vises ikke.",
+  "Drag a name onto another to swap seats.":"Træk et navn hen på et andet for at bytte pladser.",
+  "Saved versions":"Gemte versioner","seated":"placeret","Compare":"Sammenlign","Restore":"Gendan","identical to now":"identisk med nu","differ from now":"afviger fra nu",
+  "No saved versions yet. \"Save as version\" stores the current arrangement so you can come back to it.":"Ingen gemte versioner endnu. \"Gem som version\" gemmer den nuværende opstilling, så du kan vende tilbage til den.",
+  "No differences.":"Ingen forskelle.","Nobody seated here yet.":"Ingen placeret her endnu.",
+  "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
+  "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
+  "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
+  "couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+};
+let lang = localStorage.getItem("lang") || "da";
+const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
+window.T = T;
+function applyLang(){
+  document.documentElement.lang = lang;
+  $("langBtn").textContent = lang === "da" ? "EN" : "DA";
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = T(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = T(el.dataset.i18nHtml));
+}
 let me = null, members = [], tasks = [], plan = [];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isAdmin = () => me && (me.role === "couple" || me.role === "coordinator");
@@ -318,12 +355,12 @@ document.querySelectorAll("nav button[data-tab]").forEach(b => b.onclick = () =>
   if (b.dataset.tab === "guests") loadGuests();
   if (b.dataset.tab === "contacts") loadContacts();
 });
-(function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} days to go` : d === 1 ? "Tomorrow" : d === 0 ? "Today" : "Married!"; })();
+(function(){ const d = Math.ceil((WEDDING - Date.now())/864e5); $("countdown").textContent = d > 1 ? `${d} ${T("days to go")}` : d === 1 ? T("Tomorrow") : d === 0 ? T("Today") : T("Married!"); })();
 
 // ---- auth ----
 $("loginBtn").onclick = async () => {
   const email = $("email").value.trim().toLowerCase(), password = $("password").value;
-  if (!email || !password) { $("loginMsg").innerHTML = `<div class="msg">Enter both email and password.</div>`; return; }
+  if (!email || !password) { $("loginMsg").innerHTML = `<div class="msg">${T("Enter both email and password.")}</div>`; return; }
   $("loginBtn").disabled = true;
   const { error } = await sb.auth.signInWithPassword({ email, password });
   $("loginBtn").disabled = false;
@@ -331,6 +368,7 @@ $("loginBtn").onclick = async () => {
 };
 $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
 $("email").addEventListener("keydown", e => { if (e.key === "Enter") $("password").focus(); });
+$("langBtn").onclick = () => { lang = lang === "da" ? "en" : "da"; localStorage.setItem("lang", lang); applyLang(); if (me) { renderPlan(); if (isFamily()) renderTasks(); if ($("guestWrap").innerHTML) renderGuests(); } };
 $("logoutBtn").onclick = async () => { await sb.auth.signOut(); location.reload(); };
 
 async function boot(){
@@ -339,7 +377,7 @@ async function boot(){
   const r = await sb.rpc("me"); me = r.data || null;
   if (!me) { showGate(`Signed in as ${esc(data.session.user.email)}, but that email isn't on the list. Ask Saeed to add you.`); await sb.auth.signOut(); return; }
   $("gate").classList.add("hidden"); $("app").classList.remove("hidden"); $("nav").classList.remove("hidden");
-  $("meName").textContent = me.name; $("meRole").textContent = me.role;
+  $("meName").textContent = me.name; $("meRole").textContent = T(me.role);
   $("tasksTab").classList.toggle("hidden", !isFamily());
   $("contactsTab").classList.toggle("hidden", !isAdmin());
   $("contactBar").classList.toggle("hidden", !isCouple());
@@ -365,29 +403,29 @@ async function loadAll(){
   members = m.data; tasks = t.data; plan = pl.data;
   $("tAssignee").innerHTML = `<option value="">—</option>` + members.map(p => `<option>${esc(p.name)}</option>`).join("");
   renderPlan(); if (isFamily()) renderTasks();
-  $("status").textContent = `Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
+  $("status").textContent = `${T("Updated")} ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`;
 }
 function renderPlan(){
   let h = "";
-  const sections = isAdmin() ? ["Setup and morning", "Reception"] : ["Reception"];
+  const sections = isFamily() ? ["Setup and morning", "Reception"] : ["Reception"];
   for (const s of sections) {
     const rows = plan.filter(r => r.section === s); if (!rows.length) continue;
-    h += `<h2>${esc(s)}</h2><div class="card"><table>` + rows.map(r =>
+    h += `<h2>${esc(T(s))}</h2><div class="card"><table>` + rows.map(r =>
       `<tr class="${r.done?"pdone":""}">
         <td style="width:34px;padding-left:2px">${isAdmin()?`<input type="checkbox" ${r.done?"checked":""} onchange="planDone(${r.id},this.checked)" aria-label="done" style="width:22px;height:22px;accent-color:var(--sage-active)">`:(r.done?'<span style="color:var(--sage-active);font-size:20px">✓</span>':"")}</td>
-        <td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">edit</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
+        <td class="t">${esc(r.time)}</td><td>${esc(r.what)}${isAdmin()?` <a href="#" class="small" onclick="editPlan(${r.id});return false">${T("edit")}</a>`:""}</td><td class="w">${esc(r.who)}</td></tr>`).join("") + `</table></div>`;
   }
   $("planWrap").innerHTML = h;
-  const vis = plan.filter(r => isAdmin() || r.section === "Reception");
-  const d = vis.filter(r => r.done).length; $("planProgress").textContent = vis.length ? `${d} of ${vis.length} done` + (isAdmin() ? " — tick items as they happen" : "") : "";
+  const vis = plan.filter(r => isFamily() || r.section === "Reception");
+  const d = vis.filter(r => r.done).length; $("planProgress").textContent = vis.length ? `${d} / ${vis.length} ${T("done")}` + (isAdmin() ? " — " + T("tick items as they happen") : "") : "";
 }
 function openPlanEdit(r){
-  $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = r ? "Edit plan item" : "New plan item";
+  $("planEdit").classList.remove("hidden"); $("planEditTitle").textContent = T(r ? "Edit plan item" : "New plan item");
   $("pId").value = r?.id || ""; $("pSection").value = r?.section || "Reception"; $("pTime").value = r?.time || ""; $("pSort").value = r?.sort ?? ""; $("pWhat").value = r?.what || ""; $("pWho").value = r?.who || "";
   $("pDelete").classList.toggle("hidden", !r); $("planEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("pTime").focus();
 }
 window.editPlan = id => openPlanEdit(plan.find(r => r.id === id));
-window.planDone = async (id, done) => { const { error } = await sb.from("plan").update({ done, done_at: done ? new Date().toISOString() : null }).eq("id", id); if (error) alert("Not allowed: " + error.message); loadAll(); };
+window.planDone = async (id, done) => { const { error } = await sb.from("plan").update({ done, done_at: done ? new Date().toISOString() : null }).eq("id", id); if (error) alert(T("Not allowed:") + " " + error.message); loadAll(); };
 $("newPlanBtn").onclick = () => openPlanEdit(null);
 $("pCancel").onclick = () => $("planEdit").classList.add("hidden");
 $("pSave").onclick = async () => {
@@ -403,8 +441,8 @@ function renderTasks(){
   const admin = isAdmin(), mine = me.name, hide = $("hideDone").checked, today = new Date().toISOString().slice(0,10);
   const list = tasks.filter(t => !(hide && t.done));
   const groups = isAdmin()
-    ? [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)], ["Everyone else", list.filter(t => t.assignee !== mine)]]
-    : [[`${esc(mine)} — your tasks`, list.filter(t => t.assignee === mine)]];
+    ? [[`${esc(mine)} — ${T("your tasks")}`, list.filter(t => t.assignee === mine)], [T("Everyone else"), list.filter(t => t.assignee !== mine)]]
+    : [[`${esc(mine)} — ${T("your tasks")}`, list.filter(t => t.assignee === mine)]];
   let h = "";
   for (const [title, arr] of groups) {
     if (!arr.length) continue;
@@ -414,18 +452,18 @@ function renderTasks(){
         <input type="checkbox" ${t.done?"checked":""} ${admin?"":"disabled"} onchange="toggle(${t.id},this.checked)" aria-label="done">
         <div class="b"><div class="ti">${esc(t.title)}${t.assignee?`<span class="pill ${t.assignee===mine?"me":""}">${esc(t.assignee)}</span>`:""}</div>
         ${t.notes?`<div class="meta">${esc(t.notes)}</div>`:""}
-        <div class="meta"><span class="${late?"late":""}">${t.due?"Due "+fmtDue(t.due):"No date"}${late?" · overdue":""}</span>${t.done&&t.done_by?` · ticked by ${esc(t.done_by)}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">edit</a>`:""}</div></div></div>`;
+        <div class="meta"><span class="${late?"late":""}">${t.due?T("Due")+" "+fmtDue(t.due):T("No date")}${late?" · "+T("overdue"):""}</span>${t.done&&t.done_by?` · ${T("ticked by")} ${esc(t.done_by)}`:""}${admin?` · <a href="#" onclick="editTask(${t.id});return false">${T("edit")}</a>`:""}</div></div></div>`;
     }).join("") + `</div>`;
   }
-  $("taskWrap").innerHTML = h || `<div class="card small">No tasks.</div>`;
+  $("taskWrap").innerHTML = h || `<div class="card small">${T("No tasks.")}</div>`;
 }
 $("hideDone").onchange = renderTasks;
 window.toggle = async (id, done) => {
   const { error } = await sb.from("tasks").update({ done, done_at: done ? new Date().toISOString() : null, done_by: done ? me.name : null }).eq("id", id);
-  if (error) alert("Not allowed: " + error.message); loadAll();
+  if (error) alert(T("Not allowed:") + " " + error.message); loadAll();
 };
 function openTaskEdit(t){
-  $("taskEdit").classList.remove("hidden"); $("taskEditTitle").textContent = t ? "Edit task" : "New task";
+  $("taskEdit").classList.remove("hidden"); $("taskEditTitle").textContent = T(t ? "Edit task" : "New task");
   $("tId").value = t?.id || ""; $("tTitle").value = t?.title || ""; $("tDue").value = t?.due || ""; $("tAssignee").value = t?.assignee || ""; $("tNotes").value = t?.notes || "";
   $("tDelete").classList.toggle("hidden", !t); $("tTitle").focus();
 }
@@ -469,8 +507,8 @@ function renderGuests(){
   const chairs = s => live.filter(g => g.seat && (!s || g.status === s)).length;
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
   const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px;padding:14px 10px"><div style="font-size:2.1rem;font-weight:500;color:var(--ink);line-height:1.1" class="${cls}">${n}</div><div class="small" style="letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;margin-top:4px">${l}</div></div>`;
-  $("guestSummary").innerHTML = !isAdmin() ? "" : `<h2>RSVP overview</h2><div class="row" style="align-items:stretch">` +
-    box(chairs(), "chairs needed") + box(chairs("Bekræftet"), "confirmed") + box(chairs("Afventer"), "awaiting reply") + box(live.filter(g => g.highchair).length, "highchairs") + `</div>`;
+  $("guestSummary").innerHTML = !isAdmin() ? "" : `<h2>${T("RSVP overview")}</h2><div class="row" style="align-items:stretch">` +
+    box(chairs(), T("chairs needed")) + box(chairs("Bekræftet"), T("confirmed")) + box(chairs("Afventer"), T("awaiting reply")) + box(live.filter(g => g.highchair).length, T("highchairs")) + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
@@ -523,12 +561,12 @@ function renderGuests(){
   }
   hall += `</svg>`;
   const unplaced = byT[0] || [];
-  $("guestWrap").innerHTML = `<h2>Hall plan</h2>
+  $("guestWrap").innerHTML = `<h2>${T("Hall plan")}</h2>
     <div class="card" style="padding:10px 6px;overflow-x:auto">${hall}</div>
-    <div class="small" style="margin:2px 8px 14px">Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.${isFamily() ? "" : " Guests are shown by initials."}</div>` +
-    (unplaced.length ? `<h2>Not placed</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b">${isAdmin() ? `<a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}<span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
-    `<h2>Tables</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
-    <div class="small" style="margin:4px 8px">● confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.${isAdmin() ? " Drag a name onto another to swap seats." : ""}</div>`;
+    <div class="small" style="margin:2px 8px 14px">${T("Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.")}${isFamily() ? "" : " " + T("Guests are shown by initials.")}</div>` +
+    (unplaced.length ? `<h2>${T("Not placed")}</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b">${isAdmin() ? `<a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}<span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
+    `<h2>${T("Tables")}</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
+    <div class="small" style="margin:4px 8px">● ${T("confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.")}${isAdmin() ? " " + T("Drag a name onto another to swap seats.") : ""}</div>`;
   wireSeatDrag();
 }
 async function setStatus(id, status) { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests();
@@ -543,8 +581,8 @@ window.showTable = t => {
     ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
     ${arr.length ? `<table>${arr.map(g => `<tr>
       <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}</td>
-      <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">Nobody seated here yet.</div>`}
-    <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">Close</button></div></div>`;
+      <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">${T("Nobody seated here yet.")}</div>`}
+    <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">${T("Close")}</button></div></div>`;
   document.body.appendChild(wrap);
   wrap.onclick = e => { if (e.target === wrap) wrap.remove(); };
 };
@@ -556,17 +594,17 @@ window.moveGuest = id => {
   const wrap = document.createElement("div"); wrap.id = "moveSheet";
   wrap.innerHTML = `<div class="card">
     <h2 style="margin-top:0">${esc(g.name)}</h2>
-    <div class="small" style="text-align:center">Currently ${g.table_no ? "at table " + g.table_no : "not placed"} · ${esc(g.status)}</div>
-    <label>Move to table</label>
+    <div class="small" style="text-align:center">${T("Currently")} ${g.table_no ? T("at table") + " " + g.table_no : T("not placed")} · ${esc(g.status)}</div>
+    <label data-i18n="Move to table">Move to table</label>
     <div class="tblgrid">${Object.keys(CAPS).map(t => {
       const n = +t, u = used(n), full = u >= CAPS[n] && n !== g.table_no;
       return `<button class="tblbtn ${n===g.table_no?"cur":""} ${full?"full":""}" data-t="${n}">${n}<div style="font-size:.62rem;letter-spacing:.06em">${u}/${CAPS[n]}</div></button>`;
     }).join("")}</div>
     <div class="row" style="margin-top:12px">
-      <button class="btn ghost sm" data-t="">Not placed</button>
+      <button class="btn ghost sm" data-t="">${T("Not placed")}</button>
       <select id="msStatus" style="flex:1;min-width:130px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
     </div>
-    <div class="row" style="margin-top:12px"><button class="btn" id="msClose">Close</button></div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="msClose">${T("Close")}</button></div>
   </div>`;
   document.body.appendChild(wrap);
   const close = () => wrap.remove();
@@ -660,17 +698,17 @@ $("versionsBtn").onclick = () => { const w = $("versionsWrap"); if (w.innerHTML)
 async function loadVersions(){
   const { data, error } = await sb.from("seating_versions").select("id,name,note,created_at,created_by,data").order("created_at", { ascending: false });
   if (error) { $("versionsWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
-  if (!data.length) { $("versionsWrap").innerHTML = `<div class="card small">No saved versions yet. "Save as version" stores the current arrangement so you can come back to it.</div>`; return; }
+  if (!data.length) { $("versionsWrap").innerHTML = `<div class="card small">${T('No saved versions yet. "Save as version" stores the current arrangement so you can come back to it.')}</div>`; return; }
   const cur = guests.map(snapFields);
-  $("versionsWrap").innerHTML = `<h2>Saved versions</h2><div class="card">` + data.map(v => {
+  $("versionsWrap").innerHTML = `<h2>${T("Saved versions")}</h2><div class="card">` + data.map(v => {
     const seated = v.data.filter(g => g.table_no && g.status !== "Afbud").length;
     const diff = countDiff(cur, v.data);
     return `<div class="task"><div class="b">
-      <div class="ti">${esc(v.name)}<span class="pill">${seated} seated</span></div>
-      <div class="meta">${new Date(v.created_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${v.created_by?" · "+esc(v.created_by):""}${diff?` · ${diff} differ${diff===1?"s":""} from now`:" · identical to now"}</div>
+      <div class="ti">${esc(v.name)}<span class="pill">${seated} ${T("seated")}</span></div>
+      <div class="meta">${new Date(v.created_at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${v.created_by?" · "+esc(v.created_by):""}${diff?` · ${diff} ${T("differ from now")}`:" · " + T("identical to now")}</div>
       <div class="row" style="margin-top:7px">
-        <button class="btn ghost sm" onclick="compareVersion(${v.id})">Compare</button>
-        <button class="btn ghost sm" onclick="restoreVersion(${v.id})">Restore</button>
+        <button class="btn ghost sm" onclick="compareVersion(${v.id})">${T("Compare")}</button>
+        <button class="btn ghost sm" onclick="restoreVersion(${v.id})">${T("Restore")}</button>
         <button class="btn ghost sm" style="color:var(--danger);border-color:var(--danger)" onclick="deleteVersion(${v.id})">Delete</button>
       </div></div></div>`;
   }).join("") + `</div>`;
@@ -696,8 +734,8 @@ window.compareVersion = id => {
   const wrap = document.createElement("div"); wrap.id = "moveSheet";
   wrap.innerHTML = `<div class="card">
     <h2 style="margin-top:0">${esc(v.name)} vs now</h2>
-    ${rows.length ? `<table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="small" style="text-align:right;white-space:nowrap">${esc(r[1])} → <b>${esc(r[2])}</b></td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">No differences.</div>`}
-    <div class="row" style="margin-top:14px"><button class="btn" id="cmpClose">Close</button></div></div>`;
+    ${rows.length ? `<table>${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="small" style="text-align:right;white-space:nowrap">${esc(r[1])} → <b>${esc(r[2])}</b></td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">${T("No differences.")}</div>`}
+    <div class="row" style="margin-top:14px"><button class="btn" id="cmpClose">${T("Close")}</button></div></div>`;
   document.body.appendChild(wrap);
   const close = () => wrap.remove();
   wrap.onclick = e => { if (e.target === wrap) close(); };
@@ -722,18 +760,18 @@ async function loadContacts(){
   if (error) { $("contactWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
   contacts = data;
   const digits = p => (p || "").replace(/[^0-9]/g, "");
-  $("contactWrap").innerHTML = `<h2>Contacts</h2><div class="card">` + (contacts.length ? contacts.map(c => `
+  $("contactWrap").innerHTML = `<h2>${T("Contacts")}</h2><div class="card">` + (contacts.length ? contacts.map(c => `
     <div class="task"><div class="b">
       <div class="ti">${esc(c.role)}${c.name?` <span class="pill">${esc(c.name)}</span>`:""}</div>
       ${c.note?`<div class="meta">${esc(c.note)}</div>`:""}
       <div class="row" style="margin-top:6px">
         ${c.phone?`<a class="btn ghost sm" href="tel:${digits(c.phone).startsWith("45")?"+":""}${digits(c.phone)}">${esc(c.phone)}</a><a class="btn wa sm" href="https://wa.me/${digits(c.phone)}" target="_blank" rel="noopener">WhatsApp</a>`:""}
         ${c.email?`<a class="btn ghost sm" href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}
-        ${isCouple()?`<a href="#" class="small" onclick="editContact(${c.id});return false">edit</a>`:""}
-      </div></div></div>`).join("") : `<div class="small">No contacts yet.</div>`) + `</div>`;
+        ${isCouple()?`<a href="#" class="small" onclick="editContact(${c.id});return false">${T("edit")}</a>`:""}
+      </div></div></div>`).join("") : `<div class="small">${T("No contacts yet.")}</div>`) + `</div>`;
 }
 function openContactEdit(c){
-  $("contactEdit").classList.remove("hidden"); $("contactEditTitle").textContent = c ? "Edit contact" : "New contact";
+  $("contactEdit").classList.remove("hidden"); $("contactEditTitle").textContent = T(c ? "Edit contact" : "New contact");
   $("cId").value = c?.id || ""; $("cRole").value = c?.role || ""; $("cName").value = c?.name || ""; $("cPhone").value = c?.phone || ""; $("cEmail").value = c?.email || ""; $("cSort").value = c?.sort ?? ""; $("cNote").value = c?.note || "";
   $("cDelete").classList.toggle("hidden", !c); $("contactEdit").scrollIntoView({ behavior: "smooth", block: "start" }); $("cRole").focus();
 }
@@ -823,6 +861,7 @@ $("exportXlsBtn").onclick = async () => {
   btn.disabled = false;
 };
 
+applyLang();
 boot();
 </script>
 </body>
