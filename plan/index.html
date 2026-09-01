@@ -297,6 +297,7 @@ a{color:var(--bronze-text)}
         <div class="row"><div style="flex:2"><label data-i18n="Name">Name</label><input id="gName"></div><div style="flex:1"><label data-i18n="Table (blank = unplaced)">Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
         <div class="row"><div style="flex:1"><label data-i18n="Status">Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label data-i18n="Seat">Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
         <div class="row"><div style="flex:1"><label data-i18n="Menu">Menu</label><select id="gMenu"><option value="voksen">Voksenmenu</option><option value="børnemenu">Børnemenu</option><option value="ingen">Ingen mad</option></select></div></div>
+        <label data-i18n="Dietary needs">Dietary needs</label><input id="gDiet" placeholder="fx ingen ost, nøddeallergi">
         <label data-i18n="Note">Note</label><input id="gNote">
         <div class="row" style="margin-top:10px"><button class="btn primary" id="gSave" data-i18n="Save">Save</button><button class="btn ghost" id="gCancel" data-i18n="Cancel">Cancel</button></div>
       </div>
@@ -323,7 +324,6 @@ a{color:var(--bronze-text)}
     <div><h2 data-i18n="Messages">Messages</h2><div class="small" style="margin-top:2px" id="msgNote"></div></div>
     <button class="btn ghost sm" id="msgClose" data-i18n="Close">Close</button>
   </div>
-  <div class="row hidden" id="threadPick" style="padding:8px 16px 0;gap:6px"></div>
   <div class="body" id="msgWrap"></div>
   <div class="foot"><div id="replyTo" class="msg hidden" style="margin:0 0 8px;padding:7px 10px;font-size:.85rem"></div><textarea id="mBody" placeholder="…"></textarea>
     <div class="row" style="margin-top:8px;justify-content:flex-end"><button class="btn primary sm" id="mSend" data-i18n="Send">Send</button></div></div>
@@ -365,10 +365,10 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","legend":"● voksen &nbsp; Ⓑ børnemenu &nbsp; small ○ baby på skødet (b = spiser børnemenu) &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> højstol &nbsp; stiplet = afventer svar. Afbud vises ikke.","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only the couple and the coordinator can see this":"Kan kun ses af brudeparret og koordinatoren","legend":"● voksen &nbsp; Ⓑ børnemenu &nbsp; lille ○ baby uden mad &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> højstol &nbsp; <span style=\"background:#9b3b2e;color:#fff;font-weight:700;padding:0 6px;border-radius:9px\">!</span> særlige kostbehov &nbsp; stiplet = afventer svar. Afbud vises ikke.","Dietary needs":"Kostbehov","dietary needs":"kostbehov","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
-const EN_LEGEND = "● adult &nbsp; Ⓑ children's menu &nbsp; small ○ infant on lap (b = eats children's menu) &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> highchair &nbsp; dashed = awaiting reply. Declined are not drawn.";
+const EN_LEGEND = "● adult &nbsp; Ⓑ children's menu &nbsp; small ○ infant, no food &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> highchair &nbsp; <span style=\"background:#9b3b2e;color:#fff;font-weight:700;padding:0 6px;border-radius:9px\">!</span> dietary needs &nbsp; dashed = awaiting reply. Declined are not drawn.";
 const T = s => s === "legend" && lang !== "da" ? EN_LEGEND : (lang === "da" && DA[s]) ? DA[s] : s;
 // row text in the current language, falling back to the other so nothing ever renders blank
 const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
@@ -376,10 +376,9 @@ const OWNERS = ["saeed", "aya"];            // only these members see the create
 // the Messages thread is between Saeed and the coordinator only
 const myName = () => (me?.name || "").trim().toLowerCase();
 const isCoord = () => me?.role === "coordinator";
-// two separate threads: Saeed↔coordinator and Aya↔coordinator
-const myThreads = () => isCoord() ? ["saeed", "aya"] : (["saeed", "aya"].includes(myName()) ? [myName()] : []);
-const canMessage = () => myThreads().length > 0;
-let thread = null;
+// one shared thread for the couple and the coordinator
+const canMessage = () => isAdmin();
+let thread = "team";
 const cmtFor = (kind, id) => comments.filter(c => c.target === kind && c.target_id === id);
 const cmtLink = (kind, id) => {
   if (!isAdmin()) return "";
@@ -598,7 +597,8 @@ function renderGuests(){
     box(live.filter(g => (g.menu || "voksen") === "voksen").length, T("adult menus")) +
     box(live.filter(g => g.menu === "børnemenu").length, T("children's menus")) +
     box(live.filter(g => !g.seat).length, T("infants (no chair)")) +
-    box(live.filter(g => g.highchair).length, T("highchairs")) + `</div>`;
+    box(live.filter(g => g.highchair).length, T("highchairs")) +
+    box(live.filter(g => (g.diet || "").trim()).length, T("dietary needs")) + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
@@ -615,14 +615,15 @@ function renderGuests(){
       const name = g.name.length > 14 ? g.name.slice(0,13) + "…" : g.name;
       const anchor = Math.cos(a) > 0.3 ? "start" : Math.cos(a) < -0.3 ? "end" : "middle";
       const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
-      s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:${isAdmin()?"grab":"default"};touch-action:none"><title>${esc(g.name)} — tap to move, drag to swap seats</title>`;
+      s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:${isAdmin()?"grab":"default"};touch-action:none"><title>${esc(g.name)}${g.diet ? " — " + esc(g.diet) : ""}</title>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="transparent"/>`;
-      const isChild = g.menu === "børnemenu" && g.seat, isInfant = !g.seat, noFood = g.menu === "ingen";
-      // seat marker: solid = adult, split ring = child's menu, small hollow = infant on lap
-      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat ? (isChild ? "#fff" : col) : "#fff"}" stroke="${col}" stroke-width="${isChild ? 3 : 1.5}" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
-      if (isChild) s += `<text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${col}">B</text>`;
-      if (isInfant && !noFood) s += `<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle" font-size="7.5" font-weight="700" fill="${col}">b</text>`;
+      const isChild = g.menu === "børnemenu", diet = (g.diet || "").trim();
+      const r0 = g.seat ? 9 : 6;
+      // adult = solid dot · children's menu = ring with B · infant without food = small hollow
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r0}" fill="${(g.seat && !isChild) ? col : "#fff"}" stroke="${col}" stroke-width="${isChild ? 3 : 1.5}" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
+      if (isChild) s += `<text x="${x.toFixed(1)}" y="${(y+3.2).toFixed(1)}" text-anchor="middle" font-size="${g.seat ? 9 : 7}" font-weight="700" fill="${col}">B</text>`;
       if (g.highchair) s += `<rect x="${(x+7).toFixed(1)}" y="${(y-14).toFixed(1)}" width="9" height="9" rx="1.5" fill="#d4af37" stroke="#725729" stroke-width=".8"/><text x="${(x+11.5).toFixed(1)}" y="${(y-7.2).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#3b2a12">H</text>`;
+      if (diet) s += `<circle cx="${(x-11).toFixed(1)}" cy="${(y-10).toFixed(1)}" r="5" fill="#9b3b2e"/><text x="${(x-11).toFixed(1)}" y="${(y-7.4).toFixed(1)}" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff">!</text>`;
       s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text></g>`;
     });
     return s + `</svg>`;
@@ -630,7 +631,7 @@ function renderGuests(){
   // ---- hall floor plan, drawn from the table data (mirrors Bordplan – Riddersalen) ----
   const L = 29.5, B = 7.2, S = 22, OX = 26, OY = 30;           // metres, scale, origin
   const X = m => OX + m * S, Y = m => OY + (B - m) * S;         // Y flipped: north wall on top
-  const POS = { 1:[4.9,5.45], 2:[4.9,1.75], 3:[8.2,5.45], 4:[8.2,1.75], 5:[19.8,5.45], 6:[19.8,1.75], 7:[23.1,5.45], 8:[23.1,1.75], 9:[26.4,5.45] };
+  const POS = { 1:[4.9,1.75], 2:[4.9,5.45], 3:[8.2,1.75], 4:[8.2,5.45], 5:[20.2,1.75], 6:[20.2,5.45], 7:[23.5,1.75], 8:[23.5,5.45], 9:[26.8,1.75] };   // odd = south wall, 9 by the welcome sign
   const fx = (x1,x2,y1,y2,label,fill="#fffdf9",fs=7) =>
     `<rect x="${X(x1)}" y="${Y(y2)}" width="${(x2-x1)*S}" height="${(y2-y1)*S}" fill="${fill}" stroke="#b08d57" stroke-width=".8"/>` +
     (label ? `<text x="${X((x1+x2)/2)}" y="${Y((y1+y2)/2)+3}" text-anchor="middle" font-size="${fs}" fill="#6e615f">${label}</text>` : "");
@@ -638,12 +639,17 @@ function renderGuests(){
   hall += `<rect x="${X(0)}" y="${Y(B)}" width="${L*S}" height="${B*S}" fill="#fdf7ee" stroke="#725729" stroke-width="1.4"/>`;
   hall += fx(-0.5,0,2.1,4.6,"") + `<text x="${X(-0.25)}" y="${Y(3.35)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(-0.25)} ${Y(3.35)})">Vindue</text>`;
   hall += fx(L,L+0.5,2.3,4.9,"") + `<text x="${X(L+0.25)}" y="${Y(3.6)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(L+0.25)} ${Y(3.6)})">Indgang</text>`;
-  hall += fx(16.6,19.0,B,B+0.5,"Dør") + fx(5.6,8.1,-0.5,0,"Branddør") + fx(15.4,17.9,-0.5,0,"Branddør");
+  hall += fx(16.6,19.0,B,B+0.5,"Køkkendør") + fx(5.6,8.1,-0.5,0,"Branddør") + fx(15.4,17.9,-0.5,0,"Branddør");
   hall += `<path d="M ${X(10.0)} ${Y(B)} a ${0.9*S} ${0.9*S} 0 0 0 ${1.8*S} 0" fill="none" stroke="#b08d57" stroke-width=".8"/><text x="${X(10.9)}" y="${Y(B)-6}" text-anchor="middle" font-size="7" fill="#6e615f">Pejs</text>`;
   hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(16.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Bagtæppe</text>`;
-  hall += fx(1.2,3.0,3.2,4.0,"","#f8e0d8") + `<text x="${X(2.1)}" y="${Y(3.6)+3}" text-anchor="middle" font-size="7.5" fill="#725729">Saeed &amp; Aya</text>`;
+  // couple's table: long side parallel to the west wall, two chairs on the wall side, facing east into the hall
+  hall += `<rect x="${X(1.35)}" y="${Y(4.7)}" width="${0.8*S}" height="${2.2*S}" rx="3" fill="#f8e0d8" stroke="#725729" stroke-width="1.2"/>`;
+  hall += `<rect x="${X(0.95)}" y="${Y(4.05)}" width="${0.32*S}" height="${0.5*S}" rx="2" fill="#fffdf9" stroke="#b08d57" stroke-width=".8"/>`;
+  hall += `<rect x="${X(0.95)}" y="${Y(3.15)}" width="${0.32*S}" height="${0.5*S}" rx="2" fill="#fffdf9" stroke="#b08d57" stroke-width=".8"/>`;
+  hall += `<path d="M ${X(2.3)} ${Y(3.6)} l ${0.55*S} 0 m -6 -5 l 6 5 l -6 5" fill="none" stroke="#b08d57" stroke-width="1"/>`;
+  hall += `<text x="${X(1.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="7.5" fill="#725729" transform="rotate(-90 ${X(1.75)} ${Y(3.6)})">Saeed &amp; Aya</text>`;
   hall += `<rect x="${X(11.5)}" y="${Y(6.0)}" width="${6.5*S}" height="${5*S}" fill="none" stroke="#b08d57" stroke-width=".9" stroke-dasharray="5 4"/><text x="${X(14.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="9" font-style="italic" fill="#6e615f">Dansegulv</text>`;
-  hall += fx(10.2,11.4,0.15,0.95,"Kage") + fx(28.0,29.35,5.1,6.9,"DJ","#f9e9cf") + fx(28.5,29.35,0.7,2.1,"","#fdf7ee") + `<text x="${X(28.92)}" y="${Y(1.55)}" text-anchor="middle" font-size="6" fill="#6e615f">Velkomst</text><text x="${X(28.92)}" y="${Y(1.2)}" text-anchor="middle" font-size="6" fill="#6e615f">skilt</text>`;
+  hall += fx(10.2,11.4,0.15,0.95,"Kage") + fx(17.95,19.15,0.15,0.85,"Gavebord") + fx(28.3,29.35,5.1,6.9,"DJ","#f9e9cf");
   for (const t of Object.keys(POS).map(Number)) {
     const [gx, gy] = POS[t], arr = byT[t] || [], cap = CAPS[t];
     const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
@@ -675,7 +681,7 @@ window.showTable = t => {
     <h2 style="margin-top:0">Table ${t}<span class="pill ${used>CAPS[t]?"late":""}">${used} / ${CAPS[t]}</span></h2>
     ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
     ${arr.length ? `<table>${arr.map(g => `<tr>
-      <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.menu==="børnemenu"?' <span class="pill">børnemenu</span>':""}${g.menu==="ingen"?' <span class="pill">ingen mad</span>':""}${g.highchair?' <span class="pill">højstol</span>':""}</td>
+      <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.menu==="børnemenu"?' <span class="pill">børnemenu</span>':""}${g.menu==="ingen"?' <span class="pill">ingen mad</span>':""}${g.highchair?' <span class="pill">højstol</span>':""}${g.diet?` <span class="pill" style="background:#9b3b2e;color:#fff">${esc(g.diet)}</span>`:""}</td>
       <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">${T("Nobody seated here yet.")}</div>`}
     <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">${T("Close")}</button></div></div>`;
   document.body.appendChild(wrap);
@@ -700,6 +706,8 @@ window.moveGuest = id => {
       <select id="msStatus" style="flex:1;min-width:120px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
       <select id="msMenu" style="flex:1;min-width:120px">${[["voksen","Voksenmenu"],["børnemenu","Børnemenu"],["ingen","Ingen mad"]].map(([v,l])=>`<option value="${v}" ${((g.menu||"voksen")===v)?"selected":""}>${l}</option>`).join("")}</select>
     </div>
+    <label>${T("Dietary needs")}</label>
+    <div class="row"><input id="msDiet" value="${esc(g.diet || "")}" placeholder="fx ingen ost" style="flex:1"><button class="btn sm" id="msDietSave">${T("Save")}</button></div>
     <div class="row" style="margin-top:12px"><button class="btn" id="msClose">${T("Close")}</button></div>
   </div>`;
   document.body.appendChild(wrap);
@@ -707,6 +715,10 @@ window.moveGuest = id => {
   wrap.onclick = e => { if (e.target === wrap) close(); };
   wrap.querySelector("#msClose").onclick = close;
   wrap.querySelector("#msStatus").onchange = async e => { await setStatus(id, e.target.value); close(); };
+  wrap.querySelector("#msDietSave").onclick = async () => {
+    const { error } = await sb.from("guests").update({ diet: wrap.querySelector("#msDiet").value.trim(), updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) alert(error.message); close(); loadGuests();
+  };
   wrap.querySelector("#msMenu").onchange = async e => {
     const { error } = await sb.from("guests").update({ menu: e.target.value, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) alert(error.message); close(); loadGuests();
@@ -725,7 +737,7 @@ $("gSave").onclick = async () => {
   const name = $("gName").value.trim(); if (!name) return;
   const t = $("gTable").value ? +$("gTable").value : null;
   const grp = t ? (guests.find(g => g.table_no === t)?.grp || "") : "Ikke placeret";
-  const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", menu: $("gMenu").value, note: $("gNote").value.trim() });
+  const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", menu: $("gMenu").value, diet: $("gDiet").value.trim(), note: $("gNote").value.trim() });
   if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
 };
 
@@ -785,7 +797,7 @@ async function swapSeats(idA, idB){
 }
 
 // ---- seating versions ----
-const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, seat_no: g.seat_no, menu: g.menu, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
+const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, seat_no: g.seat_no, menu: g.menu, diet: g.diet, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
 $("saveVersionBtn").onclick = async () => {
   if (!guests.length) { alert("Nothing to save yet."); return; }
   const { data: existing } = await sb.from("seating_versions").select("id");
@@ -846,7 +858,7 @@ window.restoreVersion = async id => {
   if (!confirm(`Restore "${v.name}"? The current arrangement will be saved first as a backup.`)) return;
   await sb.from("seating_versions").insert({ name: "Before restoring " + v.name, data: guests.map(snapFields), created_by: me.name });
   for (const g of v.data) {
-    const { error } = await sb.from("guests").update({ table_no: g.table_no, seat_no: g.seat_no ?? null, grp: g.grp, status: g.status, seat: g.seat, menu: g.menu || "voksen", highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
+    const { error } = await sb.from("guests").update({ table_no: g.table_no, seat_no: g.seat_no ?? null, grp: g.grp, status: g.status, seat: g.seat, menu: g.menu || "voksen", diet: g.diet || "", highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
     if (error) { alert(error.message); break; }
   }
   await loadGuests(); loadVersions();
@@ -858,27 +870,15 @@ let messages = [];
 let comments = [];
 async function loadMessages(markRead){
   if (!canMessage()) return;
-  if (!thread) thread = myThreads()[0];
   const { data, error } = await sb.from("messages").select("*").order("created_at");
   if (error) { $("msgWrap").innerHTML = `<div class="card small">${esc(error.message)}</div>`; return; }
-  const all = data || [];
-  messages = all.filter(m => (m.thread || "saeed") === thread);
-  const seen = th => +(localStorage.getItem("msgSeen:" + th) || 0);
-  const unreadIn = th => all.filter(m => (m.thread || "saeed") === th && new Date(m.created_at).getTime() > seen(th) && m.author !== me.name).length;
-  const unread = myThreads().reduce((n, th) => n + unreadIn(th), 0);
+  messages = data || [];
+  const seen = +(localStorage.getItem("msgSeen") || 0);
+  const unread = messages.filter(m => new Date(m.created_at).getTime() > seen && m.author !== me.name).length;
   $("msgCount").textContent = unread || "";
   $("msgCount").classList.toggle("hidden", !unread);
-  if (markRead) localStorage.setItem("msgSeen:" + thread, Date.now());
-  // thread switcher (coordinator only)
-  const pick = $("threadPick");
-  pick.classList.toggle("hidden", myThreads().length < 2);
-  if (myThreads().length > 1) pick.innerHTML = myThreads().map(th => {
-    const n = unreadIn(th);
-    return `<button class="btn sm ${th === thread ? "primary" : "ghost"}" onclick="switchThread('${th}')">${th === "saeed" ? "Saeed" : "Aya"}${n ? ` (${n})` : ""}</button>`;
-  }).join("");
-  $("msgNote").textContent = isCoord()
-    ? T("Private thread with") + " " + (thread === "saeed" ? "Saeed" : "Aya")
-    : T("Only you and the coordinator can see this");
+  if (markRead) localStorage.setItem("msgSeen", Date.now());
+  $("msgNote").textContent = T("Only the couple and the coordinator can see this");
   const bubble = (m, depth) => {
     const mine = m.author === me.name;
     const kids = messages.filter(x => x.parent_id === m.id);
@@ -900,9 +900,9 @@ async function loadMessages(markRead){
 $("mSend").onclick = async () => {
   const body = $("mBody").value.trim(); if (!body) return;
   $("mSend").disabled = true;
-  const { error } = await sb.from("messages").insert({ body, author: me.name, thread, parent_id: replyParent });
+  const { error } = await sb.from("messages").insert({ body, author: me.name, thread: "team", parent_id: replyParent });
   $("mSend").disabled = false;
-  if (error) alert(error.message); else { $("mBody").value = ""; clearReply(); localStorage.setItem("msgSeen:" + thread, Date.now()); loadMessages(true); }
+  if (error) alert(error.message); else { $("mBody").value = ""; clearReply(); localStorage.setItem("msgSeen", Date.now()); loadMessages(true); }
 };
 $("msgFab").onclick = () => { $("msgPanel").classList.add("show"); loadMessages(true); setTimeout(() => $("mBody").focus(), 100); };
 $("msgClose").onclick = () => $("msgPanel").classList.remove("show");
@@ -955,7 +955,6 @@ window.replyTo = id => {
   $("mBody").focus();
 };
 window.clearReply = () => { replyParent = null; $("replyTo").classList.add("hidden"); $("replyTo").innerHTML = ""; };
-window.switchThread = th => { thread = th; clearReply(); loadMessages(true); setTimeout(() => $("mBody").focus(), 80); };
 window.deleteMessage = async id => { if (!confirm(T("Delete") + "?")) return; await sb.from("messages").delete().eq("id", id); loadMessages(); };
 
 // ---- contacts ----
@@ -1007,7 +1006,7 @@ $("exportPdfBtn").onclick = () => { try {
     const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
-      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.menu === "børnemenu" ? " · børnemenu" : ""}${g.menu === "ingen" ? " · ingen mad" : ""}${g.highchair ? " · højstol" : ""}</li>`).join("") + `</ol></div>`;
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.menu === "børnemenu" ? " · børnemenu" : ""}${g.menu === "ingen" ? " · ingen mad" : ""}${g.highchair ? " · højstol" : ""}${g.diet ? " · " + esc(g.diet) : ""}</li>`).join("") + `</ol></div>`;
   }).join("");
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
@@ -1018,7 +1017,7 @@ $("exportPdfBtn").onclick = () => { try {
     <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
     ${svg}
     <div class="ptables">${tables}</div>
-    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget · Ⓑ børnemenu · ○ barn under 2 år på skødet · H højstol</div>
+    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget · Ⓑ børnemenu · ○ baby uden mad · H højstol · kostbehov er angivet ved navnet</div>
     <div class="noprint" style="margin-top:18px;display:flex;gap:10px;justify-content:center">
       <button class="btn primary" onclick="window.print()">Print / gem som PDF</button>
       <button class="btn" onclick="document.getElementById('printArea').classList.remove('show')">Luk</button>
@@ -1033,10 +1032,10 @@ $("exportXlsBtn").onclick = async () => {
   try {
     if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
     const byT = tableRows();
-    const rows = [["Bord", "Plads", "Gæst", "Status", "Menu", "Tæller som stol", "Højstol", "Note"]];
+    const rows = [["Bord", "Plads", "Gæst", "Status", "Menu", "Kostbehov", "Tæller som stol", "Højstol", "Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
       for (const g of (byT[t] || []).slice().sort(seatOrder))
-        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.diet || "", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const live = guests.filter(g => g.status !== "Afbud");
     const sum = [["Bord", "Kuverter", "Voksenmenuer", "Børnemenuer", "Uden mad", "Højstole", "Max", "Ledige"]];
     for (const t of Object.keys(CAPS).map(Number)) {
@@ -1054,10 +1053,10 @@ $("exportXlsBtn").onclick = async () => {
   } catch (e) {
     // fallback: CSV with BOM, opens straight in Excel
     const byT = tableRows();
-    const lines = [["Bord","Plads","Gæst","Status","Menu","Tæller som stol","Højstol","Note"]];
+    const lines = [["Bord","Plads","Gæst","Status","Menu","Kostbehov","Tæller som stol","Højstol","Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
       for (const g of (byT[t] || []))
-        lines.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+        lines.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.diet || "", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const csv = "\uFEFF" + lines.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.csv`; a.click();
