@@ -296,6 +296,7 @@ a{color:var(--bronze-text)}
         <h2 style="margin-top:0" data-i18n="Add guest">Add guest</h2>
         <div class="row"><div style="flex:2"><label data-i18n="Name">Name</label><input id="gName"></div><div style="flex:1"><label data-i18n="Table (blank = unplaced)">Table (blank = unplaced)</label><input id="gTable" type="number" min="1" max="12"></div></div>
         <div class="row"><div style="flex:1"><label data-i18n="Status">Status</label><select id="gStatus"><option>Bekræftet</option><option>Afventer</option><option>Afbud</option></select></div><div style="flex:1"><label data-i18n="Seat">Seat</label><select id="gSeat"><option value="true">Chair</option><option value="false">Baby (no chair)</option></select></div></div>
+        <div class="row"><div style="flex:1"><label data-i18n="Menu">Menu</label><select id="gMenu"><option value="voksen">Voksenmenu</option><option value="børnemenu">Børnemenu</option><option value="ingen">Ingen mad</option></select></div></div>
         <label data-i18n="Note">Note</label><input id="gNote">
         <div class="row" style="margin-top:10px"><button class="btn primary" id="gSave" data-i18n="Save">Save</button><button class="btn ghost" id="gCancel" data-i18n="Cancel">Cancel</button></div>
       </div>
@@ -364,7 +365,7 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
@@ -592,7 +593,11 @@ function renderGuests(){
   const cap = Object.values(CAPS).reduce((a,b)=>a+b,0);
   const box = (n,l,cls="") => `<div class="card" style="flex:1;min-width:120px;text-align:center;margin:4px;padding:14px 10px"><div style="font-size:2.1rem;font-weight:500;color:var(--ink);line-height:1.1" class="${cls}">${n}</div><div class="small" style="letter-spacing:.08em;text-transform:uppercase;font-size:.72rem;margin-top:4px">${l}</div></div>`;
   $("guestSummary").innerHTML = !isAdmin() ? "" : `<h2>${T("RSVP overview")}</h2><div class="row" style="align-items:stretch">` +
-    box(chairs(), T("chairs needed")) + box(chairs("Bekræftet"), T("confirmed")) + box(chairs("Afventer"), T("awaiting reply")) + box(live.filter(g => g.highchair).length, T("highchairs")) + `</div>`;
+    box(chairs(), T("chairs needed")) + box(chairs("Bekræftet"), T("confirmed")) + box(chairs("Afventer"), T("awaiting reply")) +
+    box(live.filter(g => (g.menu || "voksen") === "voksen").length, T("adult menus")) +
+    box(live.filter(g => g.menu === "børnemenu").length, T("children's menus")) +
+    box(live.filter(g => !g.seat).length, T("infants (no chair)")) +
+    box(live.filter(g => g.highchair).length, T("highchairs")) + `</div>`;
   const byT = {}; for (const g of guests) (byT[g.table_no ?? 0] ||= []).push(g);
   const keys = Object.keys(byT).map(Number).sort((a,b)=>(a||99)-(b||99));
   // visual: one round table per card, names around the rim
@@ -664,7 +669,7 @@ window.showTable = t => {
     <h2 style="margin-top:0">Table ${t}<span class="pill ${used>CAPS[t]?"late":""}">${used} / ${CAPS[t]}</span></h2>
     ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
     ${arr.length ? `<table>${arr.map(g => `<tr>
-      <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.highchair?' <span class="pill">highchair</span>':""}</td>
+      <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.menu==="børnemenu"?' <span class="pill">børnemenu</span>':""}${g.menu==="ingen"?' <span class="pill">ingen mad</span>':""}${g.highchair?' <span class="pill">højstol</span>':""}</td>
       <td class="small" style="text-align:right;white-space:nowrap">${esc(g.status)}</td></tr>`).join("")}</table>` : `<div class="small" style="text-align:center">${T("Nobody seated here yet.")}</div>`}
     <div class="row" style="margin-top:14px"><button class="btn" onclick="closeSheets()">${T("Close")}</button></div></div>`;
   document.body.appendChild(wrap);
@@ -686,7 +691,8 @@ window.moveGuest = id => {
     }).join("")}</div>
     <div class="row" style="margin-top:12px">
       <button class="btn ghost sm" data-t="">${T("Not placed")}</button>
-      <select id="msStatus" style="flex:1;min-width:130px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
+      <select id="msStatus" style="flex:1;min-width:120px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
+      <select id="msMenu" style="flex:1;min-width:120px">${[["voksen","Voksenmenu"],["børnemenu","Børnemenu"],["ingen","Ingen mad"]].map(([v,l])=>`<option value="${v}" ${((g.menu||"voksen")===v)?"selected":""}>${l}</option>`).join("")}</select>
     </div>
     <div class="row" style="margin-top:12px"><button class="btn" id="msClose">${T("Close")}</button></div>
   </div>`;
@@ -695,6 +701,10 @@ window.moveGuest = id => {
   wrap.onclick = e => { if (e.target === wrap) close(); };
   wrap.querySelector("#msClose").onclick = close;
   wrap.querySelector("#msStatus").onchange = async e => { await setStatus(id, e.target.value); close(); };
+  wrap.querySelector("#msMenu").onchange = async e => {
+    const { error } = await sb.from("guests").update({ menu: e.target.value, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) alert(error.message); close(); loadGuests();
+  };
   wrap.querySelectorAll("[data-t]").forEach(b => b.onclick = async () => {
     const v = b.dataset.t;
     const grp = v ? (guests.find(x => x.table_no === +v && x.grp)?.grp || "") : "Ikke placeret";
@@ -709,7 +719,7 @@ $("gSave").onclick = async () => {
   const name = $("gName").value.trim(); if (!name) return;
   const t = $("gTable").value ? +$("gTable").value : null;
   const grp = t ? (guests.find(g => g.table_no === t)?.grp || "") : "Ikke placeret";
-  const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", note: $("gNote").value.trim() });
+  const { error } = await sb.from("guests").insert({ name, table_no: t, grp, status: $("gStatus").value, seat: $("gSeat").value === "true", menu: $("gMenu").value, note: $("gNote").value.trim() });
   if (error) alert(error.message); else { $("gName").value = $("gNote").value = $("gTable").value = ""; $("guestEdit").classList.add("hidden"); loadGuests(); }
 };
 
@@ -769,7 +779,7 @@ async function swapSeats(idA, idB){
 }
 
 // ---- seating versions ----
-const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, seat_no: g.seat_no, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
+const snapFields = g => ({ id: g.id, name: g.name, table_no: g.table_no, seat_no: g.seat_no, menu: g.menu, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note });
 $("saveVersionBtn").onclick = async () => {
   if (!guests.length) { alert("Nothing to save yet."); return; }
   const { data: existing } = await sb.from("seating_versions").select("id");
@@ -830,7 +840,7 @@ window.restoreVersion = async id => {
   if (!confirm(`Restore "${v.name}"? The current arrangement will be saved first as a backup.`)) return;
   await sb.from("seating_versions").insert({ name: "Before restoring " + v.name, data: guests.map(snapFields), created_by: me.name });
   for (const g of v.data) {
-    const { error } = await sb.from("guests").update({ table_no: g.table_no, seat_no: g.seat_no ?? null, grp: g.grp, status: g.status, seat: g.seat, highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
+    const { error } = await sb.from("guests").update({ table_no: g.table_no, seat_no: g.seat_no ?? null, grp: g.grp, status: g.status, seat: g.seat, menu: g.menu || "voksen", highchair: g.highchair, note: g.note, updated_at: new Date().toISOString() }).eq("id", g.id);
     if (error) { alert(error.message); break; }
   }
   await loadGuests(); loadVersions();
@@ -991,7 +1001,7 @@ $("exportPdfBtn").onclick = () => { try {
     const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
     return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
-      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.highchair ? " · højstol" : ""}</li>`).join("") + `</ol></div>`;
+      arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.menu === "børnemenu" ? " · børnemenu" : ""}${g.menu === "ingen" ? " · ingen mad" : ""}${g.highchair ? " · højstol" : ""}</li>`).join("") + `</ol></div>`;
   }).join("");
   const live = guests.filter(g => g.status !== "Afbud");
   const chairs = live.filter(g => g.seat).length;
@@ -1017,20 +1027,20 @@ $("exportXlsBtn").onclick = async () => {
   try {
     if (!window.XLSX) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"; s.onload = res; s.onerror = () => rej(new Error("cdn")); document.head.appendChild(s); });
     const byT = tableRows();
-    const rows = [["Bord", "Plads", "Gruppe", "Gæst", "Status", "Tæller som stol", "Højstol", "Note"]];
+    const rows = [["Bord", "Plads", "Gæst", "Status", "Menu", "Tæller som stol", "Højstol", "Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
       for (const g of (byT[t] || []).slice().sort(seatOrder))
-        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+        rows.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const live = guests.filter(g => g.status !== "Afbud");
-    const sum = [["Bord", "Gruppe", "Kuverter", "Højstole", "Max", "Ledige"]];
+    const sum = [["Bord", "Kuverter", "Voksenmenuer", "Børnemenuer", "Uden mad", "Højstole", "Max", "Ledige"]];
     for (const t of Object.keys(CAPS).map(Number)) {
       const arr = (byT[t] || []).filter(g => g.status !== "Afbud");
       const used = arr.filter(g => g.seat).length;
-      sum.push([t, arr[0]?.grp || "", used, arr.filter(g => g.highchair).length, CAPS[t], CAPS[t] - used]);
+      sum.push([t, used, arr.filter(g => (g.menu || "voksen") === "voksen").length, arr.filter(g => g.menu === "børnemenu").length, arr.filter(g => g.menu === "ingen").length, arr.filter(g => g.highchair).length, CAPS[t], CAPS[t] - used]);
     }
     sum.push([]);
-    sum.push(["I alt", "", live.filter(g => g.seat).length, live.filter(g => g.highchair).length, Object.values(CAPS).reduce((a, b) => a + b, 0), ""]);
-    sum.push(["Brudepar (eget bord)", "", 2]);
+    sum.push(["I alt", live.filter(g => g.seat).length, live.filter(g => (g.menu || "voksen") === "voksen").length, live.filter(g => g.menu === "børnemenu").length, live.filter(g => g.menu === "ingen").length, live.filter(g => g.highchair).length, Object.values(CAPS).reduce((a, b) => a + b, 0), ""]);
+    sum.push(["Brudepar (eget bord)", 2, 2]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), "Oversigt");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Gæsteliste");
@@ -1038,10 +1048,10 @@ $("exportXlsBtn").onclick = async () => {
   } catch (e) {
     // fallback: CSV with BOM, opens straight in Excel
     const byT = tableRows();
-    const lines = [["Bord","Gruppe","Gæst","Status","Tæller som stol","Højstol","Note"]];
+    const lines = [["Bord","Plads","Gæst","Status","Menu","Tæller som stol","Højstol","Note"]];
     for (const t of [...Object.keys(CAPS).map(Number), 0])
       for (const g of (byT[t] || []))
-        lines.push([t || "Ikke placeret", g.grp || "", g.name, g.status, g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
+        lines.push([t || "Ikke placeret", g.seat_no ?? "", g.name, g.status, g.menu || "voksen", g.status === "Afbud" ? 0 : (g.seat ? 1 : 0), g.highchair ? "Ja" : "", g.note || ""]);
     const csv = "\uFEFF" + lines.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = `Bordplan – Saeed og Aya – ${new Date().toISOString().slice(0,10)}.csv`; a.click();
