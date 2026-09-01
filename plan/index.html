@@ -365,10 +365,11 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only you and the coordinator can see this":"Kan kun ses af dig og koordinatoren","Private thread with":"Privat tråd med","legend":"● voksen &nbsp; Ⓑ børnemenu &nbsp; small ○ baby på skødet (b = spiser børnemenu) &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> højstol &nbsp; stiplet = afventer svar. Afbud vises ikke.","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
-const T = s => (lang === "da" && DA[s]) ? DA[s] : s;
+const EN_LEGEND = "● adult &nbsp; Ⓑ children's menu &nbsp; small ○ infant on lap (b = eats children's menu) &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> highchair &nbsp; dashed = awaiting reply. Declined are not drawn.";
+const T = s => s === "legend" && lang !== "da" ? EN_LEGEND : (lang === "da" && DA[s]) ? DA[s] : s;
 // row text in the current language, falling back to the other so nothing ever renders blank
 const when = ts => ts ? new Date(ts).toLocaleString(lang === "da" ? "da-DK" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
 const OWNERS = ["saeed", "aya"];            // only these members see the created/edited stamps
@@ -616,7 +617,12 @@ function renderGuests(){
       const dx = Math.cos(a) > 0.3 ? 13 : Math.cos(a) < -0.3 ? -13 : 0, dy = Math.abs(Math.cos(a)) <= 0.3 ? (Math.sin(a) < 0 ? -14 : 22) : 4;
       s += `<g class="seat-g" data-gid="${g.id}" data-tbl="${t}" data-cx="${x.toFixed(1)}" data-cy="${y.toFixed(1)}" style="cursor:${isAdmin()?"grab":"default"};touch-action:none"><title>${esc(g.name)} — tap to move, drag to swap seats</title>`;
       s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="15" fill="transparent"/>`;
-      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat?col:"#fff"}" stroke="${col}" stroke-width="1.5" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
+      const isChild = g.menu === "børnemenu" && g.seat, isInfant = !g.seat, noFood = g.menu === "ingen";
+      // seat marker: solid = adult, split ring = child's menu, small hollow = infant on lap
+      s += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${g.seat?9:6}" fill="${g.seat ? (isChild ? "#fff" : col) : "#fff"}" stroke="${col}" stroke-width="${isChild ? 3 : 1.5}" ${g.status!=="Bekræftet"?'stroke-dasharray="3 2"':""}/>`;
+      if (isChild) s += `<text x="${x.toFixed(1)}" y="${(y+3.5).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${col}">B</text>`;
+      if (isInfant && !noFood) s += `<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="middle" font-size="7.5" font-weight="700" fill="${col}">b</text>`;
+      if (g.highchair) s += `<rect x="${(x+7).toFixed(1)}" y="${(y-14).toFixed(1)}" width="9" height="9" rx="1.5" fill="#d4af37" stroke="#725729" stroke-width=".8"/><text x="${(x+11.5).toFixed(1)}" y="${(y-7.2).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#3b2a12">H</text>`;
       s += `<text x="${(x+dx).toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}" font-size="13" fill="#5a5152">${esc(name)}</text></g>`;
     });
     return s + `</svg>`;
@@ -655,7 +661,7 @@ function renderGuests(){
     <div class="small" style="margin:2px 8px 14px">${T("Tap a table to see who sits there. West end (left) is the couple; entrance and DJ at the east end. Scroll sideways on a phone.")}${isFamily() ? "" : " " + T("Guests are shown by initials.")}</div>` +
     (unplaced.length ? `<h2>${T("Not placed")}</h2><div class="card">` + unplaced.map(g => `<div class="task" style="padding:8px 0"><div class="b">${isAdmin() ? `<a href="#" onclick="moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}<span class="pill">${esc(g.status)}</span></div></div>`).join("") + `</div>` : "") +
     `<h2>${T("Tables")}</h2><div class="row" style="align-items:flex-start">` + Object.keys(POS).map(Number).filter(t => byT[t]).map(t => `<div class="card" style="flex:1 1 300px;margin:4px;padding:8px">${tableSvg(t, byT[t])}</div>`).join("") + `</div>
-    <div class="small" style="margin:4px 8px">● ${T("confirmed &nbsp; ◌ awaiting reply &nbsp; small ○ baby on lap. Declined are not drawn.")}${isAdmin() ? " " + T("Drag a name onto another to swap seats.") : ""}</div>`;
+    <div class="small" style="margin:4px 8px">${T("legend")}${isAdmin() ? " " + T("Drag a name onto another to swap seats.") : ""}</div>`;
   wireSeatDrag();
 }
 async function setStatus(id, status) { const { error } = await sb.from("guests").update({ status, updated_at: new Date().toISOString() }).eq("id", id); if (error) alert(error.message); loadGuests();
@@ -1012,7 +1018,7 @@ $("exportPdfBtn").onclick = () => { try {
     <div class="pmeta">Fredag 18. september 2026 · Bellahøjgaard, Riddersalen · ${chairs} kuverter + brudepar · gæstenavne er forkortet til initialer</div>
     ${svg}
     <div class="ptables">${tables}</div>
-    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget</div>
+    <div class="pfoot">Udskrevet ${new Date().toLocaleDateString("da-DK")} · afbud er ikke medtaget · Ⓑ børnemenu · ○ barn under 2 år på skødet · H højstol</div>
     <div class="noprint" style="margin-top:18px;display:flex;gap:10px;justify-content:center">
       <button class="btn primary" onclick="window.print()">Print / gem som PDF</button>
       <button class="btn" onclick="document.getElementById('printArea').classList.remove('show')">Luk</button>
