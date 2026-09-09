@@ -365,7 +365,7 @@ const DA = {
   "Feedback & suggestions":"Feedback og forslag","Write it here, then send it to Saeed on WhatsApp.":"Skriv her, og send det til Saeed på WhatsApp.","Message":"Besked","WhatsApp Saeed":"WhatsApp Saeed",
   "New contact":"Ny kontakt","Edit contact":"Rediger kontakt","+ New contact":"+ Ny kontakt","Role":"Rolle","Phone (with country code)":"Telefon (med landekode)",
   "No contacts yet.":"Ingen kontakter endnu.","Not allowed:":"Ikke tilladt:",
-  "Messages":"Beskeder","Only the couple and the coordinator can see this":"Kan kun ses af brudeparret og koordinatoren","legend":"● voksen &nbsp; Ⓑ børnemenu &nbsp; lille ○ baby uden mad &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> højstol &nbsp; <span style=\"background:#9b3b2e;color:#fff;font-weight:700;padding:0 6px;border-radius:9px\">!</span> særlige kostbehov &nbsp; stiplet = afventer svar. Afbud vises ikke.","Dietary needs":"Kostbehov","dietary needs":"kostbehov","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
+  "Messages":"Beskeder","Only the couple and the coordinator can see this":"Kan kun ses af brudeparret og koordinatoren","legend":"● voksen &nbsp; Ⓑ børnemenu &nbsp; lille ○ baby uden mad &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> højstol &nbsp; <span style=\"background:#9b3b2e;color:#fff;font-weight:700;padding:0 6px;border-radius:9px\">!</span> særlige kostbehov &nbsp; stiplet = afventer svar. Afbud vises ikke.","Dietary needs":"Kostbehov","dietary needs":"kostbehov","Table":"Bord","Highchair":"Højstol","Remove guest":"Fjern gæst","Menu":"Menu","adult menus":"voksenmenuer","children's menus":"børnemenuer","infants (no chair)":"babyer uden stol","Comments":"Kommentarer","No comments yet.":"Ingen kommentarer endnu.","Only the couple and the coordinator can see these":"Kan kun ses af brudeparret og koordinatoren","Reply":"Svar","Replying to":"Svarer","Delete":"Slet","Send":"Send","No messages yet.":"Ingen beskeder endnu.","edited":"redigeret","created":"oprettet","by":"af","Remove":"Fjern","from this task?":"fra denne opgave?","couple":"brudepar","coordinator":"koordinator","family":"familie","participant":"deltager"
 };
 let lang = localStorage.getItem("lang") || "da";
 const EN_LEGEND = "● adult &nbsp; Ⓑ children's menu &nbsp; small ○ infant, no food &nbsp; <span style=\"background:#d4af37;color:#3b2a12;font-weight:700;padding:0 5px;border-radius:2px\">H</span> highchair &nbsp; <span style=\"background:#9b3b2e;color:#fff;font-weight:700;padding:0 6px;border-radius:9px\">!</span> dietary needs &nbsp; dashed = awaiting reply. Declined are not drawn.";
@@ -604,11 +604,11 @@ function renderGuests(){
   // visual: one round table per card, names around the rim
   const tableSvg = (t, arr) => {
     const seated = arr.filter(g => g.status !== "Afbud").slice().sort(seatOrder), n = Math.max(seated.length, 1), R = 100, r = 55, cx = 150, cy = 150;
-    const cap = CAPS[t] || 0, used = seated.filter(g => g.seat).length;
+    const used = seated.filter(g => g.seat).length;
     let s = `<svg viewBox="-45 0 390 300" width="100%" style="max-width:380px;display:block;margin:0 auto" font-family="Cormorant Garamond,Georgia,serif">`;
     s += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#f8e0d8" stroke="#b08d57" stroke-width="1.5"/>`;
     s += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="27" font-weight="500" fill="#725729">${t}</text>`;
-    s += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="${cap&&used>cap?"#9b3b2e":"#6e615f"}">${used}${cap?" / "+cap:""}</text>`;
+    s += `<text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="12" fill="#6e615f">${used}</text>`;
     seated.forEach((g, i) => {
       const a = -Math.PI/2 + i * 2*Math.PI/n, x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
       const col = g.status === "Bekræftet" ? "#5e6a50" : "#9b3b2e";
@@ -635,13 +635,13 @@ function renderGuests(){
   const fx = (x1,x2,y1,y2,label,fill="#fffdf9",fs=7) =>
     `<rect x="${X(x1)}" y="${Y(y2)}" width="${(x2-x1)*S}" height="${(y2-y1)*S}" fill="${fill}" stroke="#b08d57" stroke-width=".8"/>` +
     (label ? `<text x="${X((x1+x2)/2)}" y="${Y((y1+y2)/2)+3}" text-anchor="middle" font-size="${fs}" fill="#6e615f">${label}</text>` : "");
-  let hall = `<svg viewBox="0 -6 ${L*S + OX*2} ${B*S + OY*2 - 6}" style="width:100%;min-width:640px;height:auto;display:block" font-family="Cormorant Garamond,Georgia,serif">`;
+  let hall = `<svg viewBox="0 -6 ${(L+8.2)*S + OX*2} ${B*S + OY*2 - 6}" style="width:100%;min-width:760px;height:auto;display:block" font-family="Cormorant Garamond,Georgia,serif">`;
   hall += `<rect x="${X(0)}" y="${Y(B)}" width="${L*S}" height="${B*S}" fill="#fdf7ee" stroke="#725729" stroke-width="1.4"/>`;
   hall += fx(-0.5,0,2.1,4.6,"") + `<text x="${X(-0.25)}" y="${Y(3.35)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(-0.25)} ${Y(3.35)})">Vindue</text>`;
   hall += fx(L,L+0.5,2.3,4.9,"") + `<text x="${X(L+0.25)}" y="${Y(3.6)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(L+0.25)} ${Y(3.6)})">Indgang</text>`;
   hall += fx(16.6,19.0,B,B+0.5,"Køkkendør") + fx(5.6,8.1,-0.5,0,"Branddør") + fx(15.4,17.9,-0.5,0,"Branddør");
   hall += `<path d="M ${X(10.0)} ${Y(B)} a ${0.9*S} ${0.9*S} 0 0 0 ${1.8*S} 0" fill="none" stroke="#b08d57" stroke-width=".8"/><text x="${X(10.9)}" y="${Y(B)-6}" text-anchor="middle" font-size="7" fill="#6e615f">Pejs</text>`;
-  hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(16.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Bagtæppe</text>`;
+  hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(16.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Backdrop</text>`;
   // couple's table: long side parallel to the west wall, two chairs on the wall side, facing east into the hall
   hall += `<rect x="${X(1.35)}" y="${Y(4.7)}" width="${0.8*S}" height="${2.2*S}" rx="3" fill="#f8e0d8" stroke="#725729" stroke-width="1.2"/>`;
   hall += `<rect x="${X(0.95)}" y="${Y(4.05)}" width="${0.32*S}" height="${0.5*S}" rx="2" fill="#fffdf9" stroke="#b08d57" stroke-width=".8"/>`;
@@ -649,17 +649,28 @@ function renderGuests(){
   hall += `<path d="M ${X(2.3)} ${Y(3.6)} l ${0.55*S} 0 m -6 -5 l 6 5 l -6 5" fill="none" stroke="#b08d57" stroke-width="1"/>`;
   hall += `<text x="${X(1.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="7.5" fill="#725729" transform="rotate(-90 ${X(1.75)} ${Y(3.6)})">Saeed &amp; Aya</text>`;
   hall += `<rect x="${X(11.5)}" y="${Y(6.0)}" width="${6.5*S}" height="${5*S}" fill="none" stroke="#b08d57" stroke-width=".9" stroke-dasharray="5 4"/><text x="${X(14.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="9" font-style="italic" fill="#6e615f">Dansegulv</text>`;
-  hall += fx(10.2,11.4,0.15,0.95,"Kage") + fx(17.95,19.15,0.15,0.85,"Gavebord") + fx(28.3,29.35,5.1,6.9,"DJ","#f9e9cf");
+  hall += fx(26.9,28.2,0.15,0.85,"Gavebord") + fx(28.3,29.35,5.1,6.9,"DJ","#f9e9cf") + fx(26.9,28.1,5.35,6.35,"DJ/foto","#fdf7ee",6);
   for (const t of Object.keys(POS).map(Number)) {
-    const [gx, gy] = POS[t], arr = byT[t] || [], cap = CAPS[t];
+    const [gx, gy] = POS[t], arr = byT[t] || [];
     const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
-    const over = used > cap, empty = used === 0;
+    const empty = used === 0;
     hall += `<g style="cursor:pointer" onclick="showTable(${t})"><title>Table ${t} — ${used}/${cap}</title>`;
     hall += `<circle cx="${X(gx)}" cy="${Y(gy)}" r="${1.35*S}" fill="#f4ece0" opacity=".55"/>`;
     hall += `<circle cx="${X(gx)}" cy="${Y(gy)}" r="${0.9*S}" fill="${empty?"#fffdf9":"#f8e0d8"}" stroke="#725729" stroke-width="1.2"/>`;
     hall += `<text x="${X(gx)}" y="${Y(gy)+1}" text-anchor="middle" font-size="15" font-weight="500" fill="#5a5152">${t}</text>`;
-    hall += `<text x="${X(gx)}" y="${Y(gy)+13}" text-anchor="middle" font-size="8" fill="${over?"#9b3b2e":"#6e615f"}">${used}/${cap}</text></g>`;
+    hall += `<text x="${X(gx)}" y="${Y(gy)+13}" text-anchor="middle" font-size="8" fill="#6e615f">${used}</text></g>`;
   }
+  // ---- lobby, east of the hall ----
+  const lx = L + 1.4;                                   // lobby starts here (metres)
+  hall += `<rect x="${X(lx)}" y="${Y(6.4)}" width="${6.4*S}" height="${5.4*S}" fill="#fdf7ee" stroke="#725729" stroke-width="1.2"/>`;
+  hall += `<text x="${X(lx+3.2)}" y="${Y(3.6)}" text-anchor="middle" font-size="9" font-style="italic" fill="#6e615f">Foyer</text>`;
+  hall += `<rect x="${X(lx)}" y="${Y(4.9)}" width="4" height="${1.8*S}" fill="#f9e9cf" stroke="#b08d57" stroke-width=".8"/>`;
+  hall += `<text x="${X(lx+0.75)}" y="${Y(4.0)}" text-anchor="middle" font-size="6" fill="#6e615f" transform="rotate(-90 ${X(lx+0.75)} ${Y(4.0)})">Til salen</text>`;
+  hall += `<rect x="${X(lx+2.2)}" y="${Y(1.0)-2}" width="${1.8*S}" height="4" fill="#f9e9cf" stroke="#b08d57" stroke-width=".8"/>`;
+  hall += `<text x="${X(lx+3.1)}" y="${Y(1.0)+14}" text-anchor="middle" font-size="6.5" fill="#6e615f">Indgang udefra</text>`;
+  hall += fx(lx+3.9, lx+6.4, 4.9, 6.4, "Garderobe / WC", "#f4ece0", 6.5);
+  hall += `<line x1="${X(L)}" y1="${Y(4.9)}" x2="${X(lx)}" y2="${Y(4.9)}" stroke="#b08d57" stroke-width=".6" stroke-dasharray="3 3"/>`;
+  hall += `<line x1="${X(L)}" y1="${Y(3.1)}" x2="${X(lx)}" y2="${Y(3.1)}" stroke="#b08d57" stroke-width=".6" stroke-dasharray="3 3"/>`;
   hall += `</svg>`;
   const unplaced = byT[0] || [];
   $("guestWrap").innerHTML = `<h2>${T("Hall plan")}</h2>
@@ -678,7 +689,7 @@ window.showTable = t => {
   const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
   const wrap = document.createElement("div"); wrap.id = "moveSheet";
   wrap.innerHTML = `<div class="card">
-    <h2 style="margin-top:0">Table ${t}<span class="pill ${used>CAPS[t]?"late":""}">${used} / ${CAPS[t]}</span></h2>
+    <h2 style="margin-top:0">${T("Table")} ${t}<span class="pill">${used}</span></h2>
     ${arr[0]?.grp ? `<div class="small" style="text-align:center;margin-bottom:6px">${esc(arr[0].grp)}</div>` : ""}
     ${arr.length ? `<table>${arr.map(g => `<tr>
       <td>${isAdmin() ? `<a href="#" onclick="closeSheets();moveGuest(${g.id});return false" style="text-decoration:none;color:var(--ink);border-bottom:1px dotted var(--brass)">${esc(g.name)}</a>` : esc(g.name)}${g.seat?"":' <span class="pill">baby</span>'}${g.menu==="børnemenu"?' <span class="pill">børnemenu</span>':""}${g.menu==="ingen"?' <span class="pill">ingen mad</span>':""}${g.highchair?' <span class="pill">højstol</span>':""}${g.diet?` <span class="pill" style="background:#9b3b2e;color:#fff">${esc(g.diet)}</span>`:""}</td>
@@ -699,22 +710,44 @@ window.moveGuest = id => {
     <label data-i18n="Move to table">Move to table</label>
     <div class="tblgrid">${Object.keys(CAPS).map(t => {
       const n = +t, u = used(n), full = u >= CAPS[n] && n !== g.table_no;
-      return `<button class="tblbtn ${n===g.table_no?"cur":""} ${full?"full":""}" data-t="${n}">${n}<div style="font-size:.62rem;letter-spacing:.06em">${u}/${CAPS[n]}</div></button>`;
+      return `<button class="tblbtn ${n===g.table_no?"cur":""} ${full?"full":""}" data-t="${n}">${n}<div style="font-size:.62rem;letter-spacing:.06em">${u}</div></button>`;
     }).join("")}</div>
     <div class="row" style="margin-top:12px">
       <button class="btn ghost sm" data-t="">${T("Not placed")}</button>
       <select id="msStatus" style="flex:1;min-width:120px">${STATUSES.map(s=>`<option ${s===g.status?"selected":""}>${s}</option>`).join("")}</select>
       <select id="msMenu" style="flex:1;min-width:120px">${[["voksen","Voksenmenu"],["børnemenu","Børnemenu"],["ingen","Ingen mad"]].map(([v,l])=>`<option value="${v}" ${((g.menu||"voksen")===v)?"selected":""}>${l}</option>`).join("")}</select>
     </div>
+    <label>${T("Name")}</label>
+    <div class="row"><input id="msName" value="${esc(g.name)}" style="flex:1"><button class="btn sm" id="msNameSave">${T("Save")}</button></div>
     <label>${T("Dietary needs")}</label>
     <div class="row"><input id="msDiet" value="${esc(g.diet || "")}" placeholder="fx ingen ost" style="flex:1"><button class="btn sm" id="msDietSave">${T("Save")}</button></div>
-    <div class="row" style="margin-top:12px"><button class="btn" id="msClose">${T("Close")}</button></div>
+    <label style="display:flex;align-items:center;gap:9px;text-transform:none;letter-spacing:0;font-size:1rem;margin-top:12px">
+      <input type="checkbox" id="msHigh" ${g.highchair ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--sage-active)"> ${T("Highchair")}
+    </label>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <button class="btn" id="msClose">${T("Close")}</button>
+      <button class="btn ghost sm" id="msDelete" style="color:var(--danger);border-color:var(--danger)">${T("Remove guest")}</button>
+    </div>
   </div>`;
   document.body.appendChild(wrap);
   const close = () => wrap.remove();
   wrap.onclick = e => { if (e.target === wrap) close(); };
   wrap.querySelector("#msClose").onclick = close;
   wrap.querySelector("#msStatus").onchange = async e => { await setStatus(id, e.target.value); close(); };
+  const save = async (patch) => {
+    const { error } = await sb.from("guests").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+    if (error) alert(error.message); close(); loadGuests();
+  };
+  wrap.querySelector("#msNameSave").onclick = async () => {
+    const v = wrap.querySelector("#msName").value.trim(); if (!v) return;
+    await save({ name: v });
+  };
+  wrap.querySelector("#msHigh").onchange = async e => await save({ highchair: e.target.checked });
+  wrap.querySelector("#msDelete").onclick = async () => {
+    if (!confirm(`${T("Remove guest")}: ${g.name}?`)) return;
+    const { error } = await sb.from("guests").delete().eq("id", id);
+    if (error) alert(error.message); close(); loadGuests();
+  };
   wrap.querySelector("#msDietSave").onclick = async () => {
     const { error } = await sb.from("guests").update({ diet: wrap.querySelector("#msDiet").value.trim(), updated_at: new Date().toISOString() }).eq("id", id);
     if (error) alert(error.message); close(); loadGuests();
@@ -1005,7 +1038,7 @@ $("exportPdfBtn").onclick = () => { try {
   const tables = Object.keys(CAPS).map(Number).filter(t => (byT[t] || []).some(g => g.status !== "Afbud")).map(t => {
     const arr = (byT[t] || []).filter(g => g.status !== "Afbud").slice().sort(seatOrder);
     const used = arr.filter(g => g.seat).length;
-    return `<div class="tb"><h3>Bord ${t} <span>${used} / ${CAPS[t]}</span></h3><ol>` +
+    return `<div class="tb"><h3>Bord ${t} <span>${used}</span></h3><ol>` +
       arr.map(g => `<li>${anon(g.name)}${g.seat ? "" : " (barn u. 2 år)"}${g.menu === "børnemenu" ? " · børnemenu" : ""}${g.menu === "ingen" ? " · ingen mad" : ""}${g.highchair ? " · højstol" : ""}${g.diet ? " · " + esc(g.diet) : ""}</li>`).join("") + `</ol></div>`;
   }).join("");
   const live = guests.filter(g => g.status !== "Afbud");
