@@ -641,7 +641,7 @@ function renderGuests(){
   hall += fx(L,L+0.5,2.3,4.9,"") + `<text x="${X(L+0.25)}" y="${Y(3.6)}" text-anchor="middle" font-size="7" fill="#6e615f" transform="rotate(-90 ${X(L+0.25)} ${Y(3.6)})">Indgang</text>`;
   hall += fx(16.6,19.0,B,B+0.5,"Køkkendør") + fx(5.6,8.1,-0.5,0,"Branddør") + fx(15.4,17.9,-0.5,0,"Branddør");
   hall += `<path d="M ${X(10.0)} ${Y(B)} a ${0.9*S} ${0.9*S} 0 0 0 ${1.8*S} 0" fill="none" stroke="#b08d57" stroke-width=".8"/><text x="${X(10.9)}" y="${Y(B)-6}" text-anchor="middle" font-size="7" fill="#6e615f">Pejs</text>`;
-  hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(16.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Backdrop</text>`;
+  hall += `<line x1="${X(12.1)}" y1="${Y(B)+4}" x2="${X(15.1)}" y2="${Y(B)+4}" stroke="#d4af37" stroke-width="3.5" stroke-linecap="round"/><text x="${X(14.1)}" y="${Y(B)+15}" text-anchor="middle" font-size="7" fill="#725729">Backdrop 3 m</text>`;
   // couple's table: long side parallel to the west wall, two chairs on the wall side, facing east into the hall
   hall += `<rect x="${X(1.35)}" y="${Y(4.7)}" width="${0.8*S}" height="${2.2*S}" rx="3" fill="#f8e0d8" stroke="#725729" stroke-width="1.2"/>`;
   hall += `<rect x="${X(0.95)}" y="${Y(4.05)}" width="${0.32*S}" height="${0.5*S}" rx="2" fill="#fffdf9" stroke="#b08d57" stroke-width=".8"/>`;
@@ -649,7 +649,9 @@ function renderGuests(){
   hall += `<path d="M ${X(2.3)} ${Y(3.6)} l ${0.55*S} 0 m -6 -5 l 6 5 l -6 5" fill="none" stroke="#b08d57" stroke-width="1"/>`;
   hall += `<text x="${X(1.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="7.5" fill="#725729" transform="rotate(-90 ${X(1.75)} ${Y(3.6)})">Saeed &amp; Aya</text>`;
   hall += `<rect x="${X(11.5)}" y="${Y(6.0)}" width="${6.5*S}" height="${5*S}" fill="none" stroke="#b08d57" stroke-width=".9" stroke-dasharray="5 4"/><text x="${X(14.75)}" y="${Y(3.6)}" text-anchor="middle" font-size="9" font-style="italic" fill="#6e615f">Dansegulv</text>`;
-  hall += fx(26.9,28.2,0.15,0.85,"Gavebord") + fx(28.3,29.35,5.1,6.9,"DJ","#f9e9cf") + fx(26.9,28.1,5.35,6.35,"DJ/foto","#fdf7ee",6);
+  hall += fx(28.3,29.35,0.3,2.1,"") + fx(28.3,29.35,5.1,6.9,"DJ","#f9e9cf") + fx(26.5,28.1,5.3,6.5,"","#fdf7ee");
+  hall += `<text x="${X(28.82)}" y="${Y(1.2)}" text-anchor="middle" font-size="6" fill="#6e615f" transform="rotate(-90 ${X(28.82)} ${Y(1.2)})">Gavebord</text>`;
+  hall += `<text x="${X(27.3)}" y="${Y(6.0)}" text-anchor="middle" font-size="5.5" fill="#6e615f">Musikerbord</text><text x="${X(27.3)}" y="${Y(5.62)}" text-anchor="middle" font-size="5.5" fill="#6e615f">3 pers.</text>`;
   for (const t of Object.keys(POS).map(Number)) {
     const [gx, gy] = POS[t], arr = byT[t] || [];
     const used = arr.filter(g => g.seat && g.status !== "Afbud").length;
@@ -669,6 +671,10 @@ function renderGuests(){
   hall += `<rect x="${X(lx+2.2)}" y="${Y(1.0)-2}" width="${1.8*S}" height="4" fill="#f9e9cf" stroke="#b08d57" stroke-width=".8"/>`;
   hall += `<text x="${X(lx+3.1)}" y="${Y(1.0)+14}" text-anchor="middle" font-size="6.5" fill="#6e615f">Indgang udefra</text>`;
   hall += fx(lx+3.9, lx+6.4, 4.9, 6.4, "Garderobe / WC", "#f4ece0", 6.5);
+  hall += fx(lx+0.25, lx+1.7, 1.4, 3.0, "", "#fffdf9");
+  hall += `<text x="${X(lx+0.97)}" y="${Y(2.35)}" text-anchor="middle" font-size="5.5" fill="#6e615f">Velkomst-</text><text x="${X(lx+0.97)}" y="${Y(2.0)}" text-anchor="middle" font-size="5.5" fill="#6e615f">drinks</text>`;
+  hall += fx(lx+0.25, lx+1.7, 5.0, 6.2, "", "#fffdf9");
+  hall += `<text x="${X(lx+0.97)}" y="${Y(5.75)}" text-anchor="middle" font-size="5.5" fill="#6e615f">Velkomstskilt</text><text x="${X(lx+0.97)}" y="${Y(5.4)}" text-anchor="middle" font-size="5.5" fill="#6e615f">+ bordplan</text>`;
   hall += `<line x1="${X(L)}" y1="${Y(4.9)}" x2="${X(lx)}" y2="${Y(4.9)}" stroke="#b08d57" stroke-width=".6" stroke-dasharray="3 3"/>`;
   hall += `<line x1="${X(L)}" y1="${Y(3.1)}" x2="${X(lx)}" y2="${Y(3.1)}" stroke="#b08d57" stroke-width=".6" stroke-dasharray="3 3"/>`;
   hall += `</svg>`;
@@ -742,7 +748,10 @@ window.moveGuest = id => {
     const v = wrap.querySelector("#msName").value.trim(); if (!v) return;
     await save({ name: v });
   };
-  wrap.querySelector("#msHigh").onchange = async e => await save({ highchair: e.target.checked });
+  wrap.querySelector("#msHigh").onchange = async e => {
+    // a highchair replaces a chair — never both
+    await save(e.target.checked ? { highchair: true, seat: false } : { highchair: false });
+  };
   wrap.querySelector("#msDelete").onclick = async () => {
     if (!confirm(`${T("Remove guest")}: ${g.name}?`)) return;
     const { error } = await sb.from("guests").delete().eq("id", id);
